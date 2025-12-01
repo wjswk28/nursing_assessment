@@ -26,11 +26,10 @@ def create_app():
     # 2) 내부에서 쓰는 폴더 정의
     # =========================================================
     app.config["UPLOAD_FOLDER"] = os.path.join(STORAGE_ROOT, "uploads")
-    app.config["PREOP_FOLDER"] = os.path.join(STORAGE_ROOT, "preop")  # ★추가 (PreOp 저장)
+    app.config["PREOP_FOLDER"] = os.path.join(STORAGE_ROOT, "preop")
     app.config["FORMS_FOLDER"] = os.path.join(STORAGE_ROOT, "forms")
     app.config["EXCEL_OUTPUT"] = os.path.join(STORAGE_ROOT, "excel_output")
     app.config["NATEON_WEBHOOK_URL"] = os.environ.get("NATEON_WEBHOOK_URL")
-
 
     os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
     os.makedirs(app.config["PREOP_FOLDER"], exist_ok=True)
@@ -64,18 +63,18 @@ def create_app():
     @app.route("/")
     def index():
         return redirect(url_for("auth.login"))
-    
+
     @login_manager.user_loader
     def load_user(user_id):
         from app.models import User
         return User.query.get(int(user_id))
-    
-    # -------------------------------
-    # 🔥 앱 초기화 후 관리자 자동 생성
-    # -------------------------------
-    with app.app_context():
-        from app.admin_init import create_default_admin
-        create_default_admin()
-        
-    return app
 
+    # =========================================================
+    # 5) DB 테이블 생성 + 기본 관리자 계정 생성
+    # =========================================================
+    with app.app_context():
+        db.create_all()   # 🔥 테이블 자동 생성
+        from app.admin_init import create_default_admin
+        create_default_admin()   # 🔥 테이블 생성 후 관리자 생성
+
+    return app
