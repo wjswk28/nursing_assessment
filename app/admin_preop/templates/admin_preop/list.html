@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+{% block title %}Patient List — 관리자{% endblock %}
+
+{% block navbar %}{% endblock %}
+
+{% block content %}
+
+<style>
+.glass-card {
+    backdrop-filter: blur(18px);
+    background: rgba(255, 255, 255, 0.55);
+}
+</style>
+
+<div class="min-h-screen bg-gradient-to-br from-sky-50 to-sky-100 px-6 py-10 flex flex-col items-center">
+
+    <!-- 헤더 -->
+    <div class="flex items-center gap-3 mb-10">
+        <img src="/static/images/checklist_logo.png" class="h-12" alt="logo">
+        <span class="text-3xl font-bold text-sky-800">Patient List</span>
+    </div>
+
+    <!-- 카드 시작 -->
+    <div class="glass-card max-w-6xl w-full rounded-2xl shadow-2xl border border-sky-200 p-10">
+
+        <!-- 검색 + 등록 버튼 -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-3">
+
+            <!-- 검색창 -->
+            <form method="GET" class="flex items-center gap-2">
+                <input type="text" name="q" value="{{ q }}"
+                    placeholder="검색: 이름 / 등록번호 / 전화 / 수술명 / 주치의"
+                    class="border border-sky-300 rounded-lg px-3 py-2 w-60
+                            focus:ring-sky-400 focus:border-sky-400">
+
+                <!-- 검색 버튼 -->
+                <button class="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-lg">
+                    검색
+                </button>
+
+                <!-- 🔥 리셋 버튼 (검색어 초기화) -->
+                <a href="{{ url_for('admin_preop.preop_list') }}"
+                class="bg-slate-300 hover:bg-slate-400 text-slate-800 px-4 py-2 rounded-lg">
+                    초기화
+                </a>
+            </form>
+
+            <!-- 환자 등록 버튼 -->
+            <a href="{{ url_for('admin_preop.preop_create_excel_full') }}"
+            class="bg-sky-600 hover:bg-sky-700 text-white px-5 py-2 rounded-xl shadow">
+                + 환자 등록
+            </a>
+
+        </div>
+
+
+
+        {% if not patients %}
+            <p class="text-center text-slate-500 py-10">등록된 문진 정보가 없습니다.</p>
+        {% else %}
+
+        <!-- 테이블 -->
+        <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow">
+            <table class="min-w-full text-sm text-slate-700">
+
+                <!-- 헤더 -->
+                <thead class="bg-sky-50 border-b">
+                    <tr class="text-sky-800 font-semibold text-center">
+
+                        <th class="px-2 py-3 w-26">수술날짜</th>       <!-- 좁게 -->
+                        <th class="px-2 py-3 w-24">등록번호</th>       <!-- 좁게 -->
+                        <th class="px-2 py-3 w-30">이름</th>           <!-- 일반 -->
+                        <th class="px-2 py-3 w-16">성별</th>           <!-- 좁게 -->
+                        <th class="px-2 py-3 w-16">나이</th>           <!-- 좁게 -->
+                        <th class="px-2 py-3 w-16">전화</th>
+                        <th class="px-2 py-3 w-62">수술명</th>         <!-- ★ 두 배 넓게 -->                        
+                        <th class="px-2 py-3 w-28">주치의</th>         <!-- 일반 -->
+                        <th class="px-2 py-3 w-20">제출</th>           <!-- 좁게 -->
+                        <th class="px-2 py-3 w-18">상세</th>           <!-- 좁게 -->
+                        <th class="px-2 py-3 w-18">수정</th>           <!-- 좁게 -->
+                        <th class="px-2 py-3 w-18">링크</th>           <!-- 좁게 -->
+                        <th class="px-2 py-3 w-18">삭제</th>
+                    </tr>
+                </thead>
+
+
+                <tbody>
+                    {% for p in patients %}
+                    <tr class="border-b hover:bg-sky-50 transition">
+
+                        <!-- 수술날짜 -->
+                        <td class="px-3 py-3 text-center">
+                            {{ p.surgery_date if p.surgery_date else "-" }}
+                        </td>
+
+                        <!-- 등록번호 -->
+                        <td class="px-3 py-3 text-center">
+                            {{ p.patient_id }}
+                        </td>
+
+                        <!-- 이름 -->
+                        <td class="px-3 py-3 text-center font-semibold">
+                            {{ p.name }}
+                        </td>
+
+                        <!-- 성별 -->
+                        <td class="px-3 py-3 text-center">
+                            {% if p.gender == "M" %}
+                                <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs">남</span>
+                            {% elif p.gender == "F" %}
+                                <span class="px-2 py-1 bg-pink-100 text-pink-700 rounded-lg text-xs">여</span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+
+                        <!-- 나이 계산 -->
+                        <td class="px-3 py-3 text-center">
+                            {{ p.age if p.age else '-' }}
+                        </td>
+                        <!-- 전화번호 아이콘 -->
+                        <td class="px-2 py-3 text-center w-16">
+                            {% if p.phone %}
+                                <button onclick="copyPhone('{{ p.phone }}')" 
+                                        class="text-sky-600 hover:text-sky-800 transition">
+                                    <i data-lucide="phone" class="w-5 h-5"></i>
+                                </button>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <!-- 수술명 -->
+                        <td class="px-3 py-3 text-center truncate max-w-[240px]">
+                            {{ p.surgery_name if p.surgery_name else "-" }}
+                        </td>
+
+                        <!-- 주치의 -->
+                        <td class="px-3 py-3 text-center">
+                            {{ p.doctor_name }}
+                        </td>
+
+                        <!-- 제출 여부 -->
+                        <td class="px-3 py-3 text-center">
+                            {% if p.submitted %}
+                                <span class="text-green-600 font-bold">완료</span>
+                            {% else %}
+                                <span class="text-red-500 font-bold">미제출</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- 상세보기 -->
+                        <td class="px-3 py-3 text-center">
+                            <a href="{{ url_for('admin_preop.preop_view', patient_id=p.id) }}"
+                               class="text-sky-600 hover:underline font-semibold">
+                                보기
+                            </a>
+                        </td>
+
+                        <!-- 수정 -->
+                        <td class="px-3 py-3 text-center">
+                            <a href="{{ url_for('admin_preop.preop_edit', patient_id=p.id) }}"
+                               class="text-yellow-600 hover:underline font-semibold">
+                                수정
+                            </a>
+                        </td>
+
+                        <!-- 링크 복사 -->
+                        <td class="px-3 py-3 text-center">
+                            <button onclick="copyLink('{{ request.host_url }}preop/start/{{ p.token }}')"
+                                    class="text-sky-600 hover:underline font-semibold">
+                                <i data-lucide="copy" class="w-5 h-5"></i>
+                            </button>
+                        </td>
+                        <!-- 삭제 -->
+                        <td class="px-3 py-3 text-center">
+                            <button onclick="deletePatient({{ p.id }})"
+                                    class="text-red-500 hover:text-red-700 font-semibold">
+                                <i data-lucide='trash-2' class='w-5 h-5'></i>
+                            </button>
+                        </td>
+
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+        {% if pagination.pages > 1 %}
+        <div class="flex justify-center mt-6">
+
+            <!-- 이전 버튼 -->
+            {% if pagination.has_prev %}
+                <a href="{{ url_for('admin_preop.preop_list', page=pagination.prev_num, q=q) }}"
+                class="px-3 py-2 mx-1 bg-sky-100 text-sky-700 rounded-lg hover:bg-sky-200">
+                    이전
+                </a>
+            {% endif %}
+
+            <!-- 페이지 번호 -->
+            {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                {% if p %}
+                    {% if p == pagination.page %}
+                        <span class="px-3 py-2 mx-1 bg-sky-600 text-white rounded-lg">{{ p }}</span>
+                    {% else %}
+                        <a href="{{ url_for('admin_preop.preop_list', page=p, q=q) }}"
+                        class="px-3 py-2 mx-1 bg-sky-100 text-sky-700 rounded-lg hover:bg-sky-200">
+                            {{ p }}
+                        </a>
+                    {% endif %}
+                {% else %}
+                    <span class="px-3 py-2 mx-1">…</span>
+                {% endif %}
+            {% endfor %}
+
+            <!-- 다음 버튼 -->
+            {% if pagination.has_next %}
+                <a href="{{ url_for('admin_preop.preop_list', page=pagination.next_num, q=q) }}"
+                class="px-3 py-2 mx-1 bg-sky-100 text-sky-700 rounded-lg hover:bg-sky-200">
+                    다음
+                </a>
+            {% endif %}
+
+        </div>
+        {% endif %}
+
+        {% endif %}
+    </div>
+</div>
+<div id="toastPhone"
+     class="hidden fixed top-5 left-1/2 transform -translate-x-1/2 
+            bg-sky-700 text-white py-3 px-6 rounded-lg shadow-lg z-50
+            transition opacity-0 duration-300">
+    전화번호가 복사 되었습니다.
+</div>
+<div id="toastLink"
+     class="hidden fixed top-20 left-1/2 transform -translate-x-1/2 
+            bg-green-600 text-white py-3 px-6 rounded-lg shadow-lg z-50
+            transition opacity-0 duration-300">
+    경로가 복사 되었습니다.
+</div>
+<!-- 등록 성공 토스트 -->
+<div id="toastRegister"
+     class="hidden fixed top-10 left-1/2 transform -translate-x-1/2
+            bg-green-600 text-white py-3 px-6 rounded-lg shadow-lg z-50
+            transition opacity-0 duration-300">
+    환자가 등록되었습니다.
+</div>
+
+
+<script>
+function copyLink(url) {
+    navigator.clipboard.writeText(url);
+
+    const toast = document.getElementById("toastLink");
+    toast.classList.remove("hidden");
+    toast.style.opacity = "1";
+
+    setTimeout(() => {
+        toast.style.opacity = "0";
+    }, 2500);
+
+    setTimeout(() => {
+        toast.classList.add("hidden");
+    }, 3000);
+}
+function copyPhone(phone) {
+    navigator.clipboard.writeText(phone);
+
+    const toast = document.getElementById("toastPhone");
+    toast.classList.remove("hidden");
+    toast.style.opacity = "1";
+
+    setTimeout(() => {
+        toast.style.opacity = "0";
+    }, 2500);
+
+    setTimeout(() => {
+        toast.classList.add("hidden");
+    }, 3000);
+}
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const messages = JSON.parse('{{ get_flashed_messages(with_categories=true) | tojson | safe }}');
+
+    if (messages.length > 0) {
+        const category = messages[0][0];
+        const msg = messages[0][1];
+
+        if (category === "success") {
+            const toast = document.getElementById("toastRegister");
+            toast.textContent = msg;
+            toast.classList.remove("hidden");
+            toast.style.opacity = "1";
+
+            setTimeout(() => { toast.style.opacity = "0"; }, 2500);
+            setTimeout(() => { toast.classList.add("hidden"); }, 3000);
+        }
+    }
+});
+
+function deletePatient(patientId) {
+    if (!confirm("정말 삭제하시겠습니까?\n삭제된 환자 정보는 되돌릴 수 없습니다.")) {
+        return;
+    }
+
+    fetch(`/admin/preop/delete/${patientId}`, {
+        method: "DELETE",
+        headers: {
+            "X-Requested-With": "XMLHttpRequest"
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === "success") {
+            alert("삭제되었습니다.");
+            location.reload();
+        } else {
+            alert("삭제 실패: " + data.message);
+        }
+    })
+    .catch(err => {
+        alert("서버 오류가 발생했습니다.");
+        console.error(err);
+    });
+}
+</script>
+
+
+{% endblock %}
+

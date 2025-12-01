@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% set hide_nav = True %}
+{% block content %}
+
+<!-- 전체 container -->
+<div class="min-h-screen flex items-start justify-center px-4 pt-6 pb-16">
+    
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-lg border border-sky-100">
+
+        <!-- 진행률 영역 (박스 내부에 위치해야 라운드가 유지됨) -->
+        {% if not readonly %}
+        <div class="bg-sky-50 px-6 pt-5 pb-4 rounded-t-2xl">
+
+            <!-- Progress Bar -->
+            <div class="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
+                <div class="h-3 bg-gradient-to-r from-sky-400 to-sky-600 rounded-full transition-all duration-300"
+                    style="width: calc({{ step }} / 9 * 100%);">
+                </div>
+            </div>
+
+            <div class="text-slate-500 text-xs mt-2 text-center">
+                {{ step }} / 9단계
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- 타이틀 박스 -->
+        <div class="px-6 mt-5">
+            <div class="bg-blue-50 border border-blue-200 rounded-xl py-3 text-center">
+                <h2 class="text-sky-700 font-bold text-lg">{{ title }}</h2>
+            </div>
+        </div>
+
+
+        <!-- -------- 본문 폼 영역 -------- -->
+        <div class="px-6 py-6">
+            {% if readonly %}
+            <div class="pointer-events-none opacity-100">
+            {% endif %}
+
+            <form id="stepForm" method="POST">
+                {% block form_fields %}{% endblock %}
+            </form>
+
+            {% if readonly %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- 버튼 -->
+        {% if not readonly %}
+        <div class="flex justify-between px-6 pb-6">
+
+            {% if step > 1 %}
+            <a href="{{ url_for('preop.form_step', token=patient.token, step=step-1) }}"
+               class="px-4 py-2 rounded-lg bg-slate-200 text-slate-700 font-medium shadow">
+                이전
+            </a>
+            {% else %}
+            <span></span>
+            {% endif %}
+
+            <button type="submit" form="stepForm"
+                    class="px-4 py-2 rounded-lg bg-sky-600 text-white font-medium shadow hover:bg-sky-700">
+                다음
+            </button>
+
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<!-- 🔔 Toast 메시지 -->
+<div id="toast-message"
+     class="hidden fixed top-5 left-1/2 transform -translate-x-1/2 
+            bg-red-500 text-white py-3 px-6 rounded-xl shadow-lg z-50
+            opacity-0 transition-opacity duration-300">
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const messages = JSON.parse('{{ get_flashed_messages(with_categories=true) | tojson | safe }}');
+
+    if (messages.length > 0) {
+        const category = messages[0][0];
+        const message = messages[0][1];
+
+        const toast = document.getElementById("toast-message");
+
+        if (category === "error") {
+            toast.classList.remove("bg-green-600");
+            toast.classList.add("bg-red-500");
+        } else {
+            toast.classList.remove("bg-red-500");
+            toast.classList.add("bg-green-600");
+        }
+
+        toast.textContent = message;
+        toast.classList.remove("hidden");
+
+        setTimeout(() => { toast.style.opacity = "1"; }, 50);
+        setTimeout(() => { toast.style.opacity = "0"; }, 2500);
+        setTimeout(() => { toast.classList.add("hidden"); }, 3000);
+    }
+});
+</script>
+
+{% endblock %}

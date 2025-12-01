@@ -1,0 +1,110 @@
+{% extends "preop/step_readonly_base.html" %}
+{% block form_fields %}
+
+<div class="space-y-3">
+
+    <!-- 1. 현재 치과 치료 여부 -->
+    <div>
+        <label class="font-semibold text-sky-700">1. 현재 치과 치료 여부</label>
+
+        <div class="flex gap-6 mt-2">
+
+            <!-- 무 -->
+            <label class="view-radio-label
+                {% if saved.dental_treatment == '무' %}
+                    view-radio-on
+                {% else %}
+                    view-radio-off
+                {% endif %}
+            ">
+                <input disabled type="radio" value="무"
+                       {% if saved.dental_treatment == '무' %}checked{% endif %}>
+                무
+            </label>
+
+            <!-- 유 -->
+            <label class="view-radio-label
+                {% if saved.dental_treatment == '유' %}
+                    view-radio-on
+                {% else %}
+                    view-radio-off
+                {% endif %}
+            ">
+                <input disabled type="radio" value="유"
+                       {% if saved.dental_treatment == '유' %}checked{% endif %}>
+                유
+            </label>
+
+        </div>
+
+        {% if saved.dental_treatment == '유' and saved.dental_treatment_desc %}
+        <input disabled type="text"
+               value="{{ saved.dental_treatment_desc }}"
+               class="w-full border rounded p-3 mt-2">
+        {% endif %}
+    </div>
+
+    <!-- 2. 치아 상태 평가 -->
+    <div>
+        <label class="font-semibold text-sky-700">2. 치아 상태 평가</label>
+
+        <div class="grid grid-cols-2 gap-3 mt-3">
+
+            <label class="view-checkbox-label
+                {% if saved.tooth_normal == '1' %}view-checkbox-on{% else %}view-checkbox-off{% endif %}">
+                <input disabled type="checkbox" {% if saved.tooth_normal == '1' %}checked{% endif %}>
+                이상 없음
+            </label>
+
+            <label class="view-checkbox-label
+                {% if saved.tooth_cracked == '1' %}view-checkbox-on{% else %}view-checkbox-off{% endif %}">
+                <input disabled type="checkbox" {% if saved.tooth_cracked == '1' %}checked{% endif %}>
+                깨져있는 치아
+            </label>
+
+            <label class="view-checkbox-label
+                {% if saved.tooth_missing == '1' %}view-checkbox-on{% else %}view-checkbox-off{% endif %}">
+                <input disabled type="checkbox" {% if saved.tooth_missing == '1' %}checked{% endif %}>
+                발치된 치아
+            </label>
+
+            <label class="view-checkbox-label
+                {% if saved.tooth_mobile == '1' %}view-checkbox-on{% else %}view-checkbox-off{% endif %}">
+                <input disabled type="checkbox" {% if saved.tooth_mobile == '1' %}checked{% endif %}>
+                흔들리는 치아
+            </label>
+
+            <label class="view-checkbox-label
+                {% if saved.tooth_implant == '1' %}view-checkbox-on{% else %}view-checkbox-off{% endif %}">
+                <input disabled type="checkbox" {% if saved.tooth_implant == '1' %}checked{% endif %}>
+                임플란트
+            </label>
+
+            <label class="view-checkbox-label
+                {% if saved.tooth_brace == '1' %}view-checkbox-on{% else %}view-checkbox-off{% endif %}">
+                <input disabled type="checkbox" {% if saved.tooth_brace == '1' %}checked{% endif %}>
+                교정기
+            </label>
+
+            <label class="view-checkbox-label
+                {% if saved.tooth_prosthesis == '1' %}view-checkbox-on{% else %}view-checkbox-off{% endif %}">
+                <input disabled type="checkbox" {% if saved.tooth_prosthesis == '1' %}checked{% endif %}>
+                보철기
+            </label>
+
+        </div>
+    </div>
+
+    <!-- 3. 기타 치아 관련 특이사항 -->
+    {% if saved.tooth_notes %}
+    <div>
+        <label class="font-semibold text-sky-700">3. 기타 치아 관련 특이사항</label>
+        <input disabled type="text"
+               value="{{ saved.tooth_notes }}"
+               class="w-full border rounded p-3 mt-2">
+    </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}

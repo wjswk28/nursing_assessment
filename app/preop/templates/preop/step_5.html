@@ -1,0 +1,303 @@
+{% extends "preop/step_base.html" %}
+{% set hide_nav = True %}
+{% set title = "전신 및 기능 상태 평가" %}
+
+{% block form_fields %}
+
+<div class="space-y-4">
+
+    <!-- 1. 전신 상태 -->
+    <div>
+        <label class="font-semibold text-sky-700">1. 전신 상태</label>
+        <div class="flex items-center gap-6 mt-3">
+            <label>
+                <input type="checkbox" name="general_good" value="1"
+                       {% if saved.general_good == "1" %} checked {% endif %}>
+                양호
+            </label>
+            <label>
+                <input type="checkbox" name="general_poor" value="1"
+                       {% if saved.general_poor == "1" %} checked {% endif %}>
+                허약함
+            </label>
+        </div>
+    </div>
+
+    <!-- 2. 정서적 상태 -->
+    <div class="disease-group" data-field="emotion">
+        <label class="font-semibold text-sky-700">2. 정서적 상태</label>
+
+        <div class="flex items-center gap-6 mt-3">
+            <label>
+                <input type="radio" name="emotion" value="양호"
+                       class="radio-none"
+                       {% if saved.emotion == "양호" %} checked {% endif %}> 양호
+            </label>
+
+            <label>
+                <input type="radio" name="emotion" value="불안"
+                       class="radio-none"
+                       {% if saved.emotion == "불안" %} checked {% endif %}> 불안
+            </label>
+
+            <label>
+                <input type="radio" name="emotion" value="기타"
+                       class="radio-yes"
+                       {% if saved.emotion == "기타" %} checked {% endif %}> 기타
+            </label>
+        </div>
+
+        <input name="emotion_desc"
+               value="{{ saved.emotion_desc or '' }}"
+               class="w-full border rounded-lg px-3 py-2 mt-3 desc-box
+                      {% if saved.emotion != '기타' %} hidden {% endif %}"
+               placeholder="기타 정서 상태를 입력해주세요.">
+    </div>
+
+    <!-- 3. 섭취 상태 -->
+    <div>
+        <label class="font-semibold text-sky-700">3. 섭취 상태</label>
+        <div class="flex items-center gap-6 mt-3">
+            <label>
+                <input type="checkbox" name="eating_normal" value="1"
+                       {% if saved.eating_normal == "1" %} checked {% endif %}> 정상
+            </label>
+
+            <label>
+                <input type="checkbox" name="eating_dysphagia" value="1"
+                       {% if saved.eating_dysphagia == "1" %} checked {% endif %}> 연하곤란
+            </label>
+        </div>
+    </div>
+
+    <!-- 4. 최근 3개월 체중 감소 -->
+    <div class="disease-group" data-field="wtloss">
+        <label class="font-semibold text-sky-700">4. 최근 3개월 체중 감소</label>
+
+        <div class="flex items-center gap-6 mt-3">
+            <label>
+                <input type="radio" name="wtloss" value="무"
+                       class="radio-none"
+                       {% if saved.wtloss == "무" %} checked {% endif %}> 무
+            </label>
+
+            <label>
+                <input type="radio" name="wtloss" value="유"
+                       class="radio-yes"
+                       {% if saved.wtloss == "유" %} checked {% endif %}> 유
+            </label>
+        </div>
+    </div>
+
+    <!-- 5. 치료식 여부 -->
+    <div class="disease-group" data-field="therapeutic_diet">
+        <label class="font-semibold text-sky-700">5. 치료식 여부</label>
+
+        <div class="flex items-center gap-6 mt-3">
+            <label>
+                <input type="radio" name="therapeutic_diet" value="무"
+                       class="radio-none"
+                       {% if saved.therapeutic_diet == "무" %} checked {% endif %}> 무
+            </label>
+
+            <label>
+                <input type="radio" name="therapeutic_diet" value="유"
+                       class="radio-yes"
+                       {% if saved.therapeutic_diet == "유" %} checked {% endif %}> 유
+            </label>
+        </div>
+
+        <input name="therapeutic_diet_desc"
+               value="{{ saved.therapeutic_diet_desc or '' }}"
+               class="w-full border rounded-lg px-3 py-2 mt-3 desc-box
+                      {% if saved.therapeutic_diet != '유' %} hidden {% endif %}"
+               placeholder="어떤 치료식인지 입력하세요.">
+    </div>
+
+    <!-- 6. 시력장애 -->
+    <div class="disease-group" data-field="vision">
+        <label class="font-semibold text-sky-700">6. 시력장애</label>
+
+        <div class="flex items-center gap-6 mt-3">
+            <label>
+                <input type="radio" name="vision" value="무"
+                       class="radio-none"
+                       {% if saved.vision == "무" %} checked {% endif %}> 무
+            </label>
+
+            <label>
+                <input type="radio" name="vision" value="유"
+                       class="radio-yes"
+                       {% if saved.vision == "유" %} checked {% endif %}> 유
+            </label>
+        </div>
+
+        <div class="flex gap-6 mt-3 desc-box {% if saved.vision != '유' %} hidden {% endif %}">
+            <label><input type="checkbox" name="vision_glasses" value="1"
+                {% if saved.vision_glasses == "1" %} checked {% endif %}> 안경</label>
+
+            <label><input type="checkbox" name="vision_lens" value="1"
+                {% if saved.vision_lens == "1" %} checked {% endif %}> 렌즈</label>
+        </div>
+    </div>
+
+    <!-- 7. 청력장애 -->
+    <div class="disease-group" data-field="hearing">
+        <label class="font-semibold text-sky-700">7. 청력장애</label>
+
+        <!-- 유/무 -->
+        <div class="flex items-center gap-6 mt-2">
+            <label>
+                <input type="radio" name="hearing" value="무"
+                    class="radio-none"
+                    {% if saved.hearing == "무" %}checked{% endif %}>
+                무
+            </label>
+
+            <label>
+                <input type="radio" name="hearing" value="유"
+                    class="radio-yes"
+                    {% if saved.hearing == "유" %}checked{% endif %}>
+                유
+            </label>
+        </div>
+
+        <!-- 유 선택 시 나타나는 전체 박스 -->
+        <div class="mt-3 space-y-3 desc-box {% if saved.hearing != '유' %} hidden {% endif %}"
+            id="hearing-detail-box">
+
+            <!-- 첫 번째 줄: 보청기 + 오른쪽/왼쪽 (보청기 체크 시 표시) -->
+            <div class="flex flex-wrap items-center gap-4">
+                <label class="flex items-center gap-1">
+                    <input type="checkbox" id="hearing_aid" name="hearing_aid" value="1"
+                        {% if saved.hearing_aid == "1" %}checked{% endif %}>
+                    보청기
+                </label>
+
+                <!-- 보청기 체크 시 표시할 오른쪽/왼쪽 -->
+                <div id="aid-side-box"
+                    class="flex items-center gap-4 {% if saved.hearing_aid != '1' %}hidden{% endif %}">
+                    <label><input type="checkbox" name="hearing_right" value="1"
+                        {% if saved.hearing_right == "1" %}checked{% endif %}> 오른쪽</label>
+
+                    <label><input type="checkbox" name="hearing_left" value="1"
+                        {% if saved.hearing_left == "1" %}checked{% endif %}> 왼쪽</label>
+                </div>
+            </div>
+
+            <!-- 두 번째 줄: 기타 입력칸 -->
+            <div>
+                <label class="text-slate-600 text-sm">기타:</label>
+                <input type="text"
+                    name="hearing_desc"
+                    class="w-full border rounded-lg px-3 py-2 mt-1"
+                    placeholder="청력관련 질환 입력"
+                    value="{{ saved.hearing_desc or '' }}">
+            </div>
+
+        </div>
+    </div>
+
+
+
+    <!-- 8. 수면장애 -->
+    <div class="disease-group" data-field="sleep">
+        <label class="font-semibold text-sky-700">8. 수면장애</label>
+
+        <div class="flex items-center gap-6 mt-3">
+            <label><input type="radio" name="sleep" value="무" class="radio-none"
+                {% if saved.sleep == "무" %} checked {% endif %}> 무</label>
+
+            <label><input type="radio" name="sleep" value="유" class="radio-yes"
+                {% if saved.sleep == "유" %} checked {% endif %}> 유</label>
+        </div>
+
+        <input name="sleep_desc"
+               value="{{ saved.sleep_desc or '' }}"
+               class="w-full border rounded-lg px-3 py-2 mt-3 desc-box
+                      {% if saved.sleep != '유' %} hidden {% endif %}"
+               placeholder="수면장애 내용 입력">
+    </div>
+
+    <!-- 9. 배변장애 -->
+    <div class="disease-group" data-field="bowel">
+        <label class="font-semibold text-sky-700">9. 배변장애</label>
+
+        <div class="flex items-center gap-6 mt-3">
+            <label><input type="radio" name="bowel" value="무" class="radio-none"
+                {% if saved.bowel == "무" %} checked {% endif %}> 무</label>
+
+            <label><input type="radio" name="bowel" value="유" class="radio-yes"
+                {% if saved.bowel == "유" %} checked {% endif %}> 유</label>
+        </div>
+
+        <input name="bowel_desc"
+               value="{{ saved.bowel_desc or '' }}"
+               class="w-full border rounded-lg px-3 py-2 mt-3 desc-box
+                      {% if saved.bowel != '유' %} hidden {% endif %}"
+               placeholder="배변장애 내용을 입력해주세요.">
+    </div>
+
+    <!-- 10. 배뇨장애 -->
+    <div class="disease-group" data-field="urination">
+        <label class="font-semibold text-sky-700">10. 배뇨장애</label>
+
+        <div class="flex items-center gap-6 mt-3">
+            <label><input type="radio" name="urination" value="무" class="radio-none"
+                {% if saved.urination == "무" %} checked {% endif %}> 무</label>
+
+            <label><input type="radio" name="urination" value="유" class="radio-yes"
+                {% if saved.urination == "유" %} checked {% endif %}> 유</label>
+        </div>
+
+        <input name="urination_desc"
+               value="{{ saved.urination_desc or '' }}"
+               class="w-full border rounded-lg px-3 py-2 mt-3 desc-box
+                      {% if saved.urination != '유' %} hidden {% endif %}"
+               placeholder="배뇨장애 내용을 입력해주세요.">
+    </div>
+
+</div>
+
+<!-- 유/무 선택 시 세부항목 표시 스크립트 -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    /* 기존 유/무 desc 박스 제어 */
+    document.querySelectorAll(".disease-group").forEach(group => {
+        const yes = group.querySelector(".radio-yes");
+        const no = group.querySelector(".radio-none");
+        const boxes = group.querySelectorAll(".desc-box");
+
+        yes && yes.addEventListener("change", () => {
+            boxes.forEach(b => b.classList.remove("hidden"));
+        });
+
+        no && no.addEventListener("change", () => {
+            boxes.forEach(b => b.classList.add("hidden"));
+        });
+    });
+
+    /* 🔥 청력장애 — 보청기 클릭 시 오른쪽/왼쪽 표시 */
+
+    const hearingAid = document.getElementById("hearing_aid");
+    const sideBox = document.getElementById("aid-side-box");
+
+    if (hearingAid) {
+        hearingAid.addEventListener("change", () => {
+            if (hearingAid.checked) {
+                sideBox.classList.remove("hidden");
+            } else {
+                sideBox.classList.add("hidden");
+
+                // 보청기 해제 시 오른쪽/왼쪽도 자동 해제
+                document.querySelector("input[name='hearing_right']").checked = false;
+                document.querySelector("input[name='hearing_left']").checked = false;
+            }
+        });
+    }
+});
+</script>
+
+
+{% endblock %}

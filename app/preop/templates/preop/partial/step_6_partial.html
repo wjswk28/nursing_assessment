@@ -1,0 +1,168 @@
+{% extends "preop/step_readonly_base.html" %}
+{% block form_fields %}
+
+<div class="space-y-3">
+
+    <!-- 1. 통증 민감도 -->
+    <div>
+        <label class="font-semibold text-sky-700">
+            1. 본인이 다른 사람보다 통증에 민감하다고 생각하나요?
+        </label>
+
+        <div class="flex gap-6 mt-2">
+
+            <!-- 아니오 -->
+            <label class="view-radio-label
+                {% if saved.pain_sensitive == '아니오' %}
+                    view-radio-on
+                {% else %}
+                    view-radio-off
+                {% endif %}
+            ">
+                <input disabled type="radio" value="아니오"
+                       {% if saved.pain_sensitive == '아니오' %}checked{% endif %}> 
+                아니오
+            </label>
+
+            <!-- 예 -->
+            <label class="view-radio-label
+                {% if saved.pain_sensitive == '예' %}
+                    view-radio-on
+                {% else %}
+                    view-radio-off
+                {% endif %}
+            ">
+                <input disabled type="radio" value="예"
+                       {% if saved.pain_sensitive == '예' %}checked{% endif %}> 
+                예
+            </label>
+        </div>
+    </div>
+
+    <!-- 2. 통증 참는 정도 -->
+    <div>
+        <label class="font-semibold text-sky-700">
+            2. 평소에 통증을 잘 참는 편인가요?
+        </label>
+
+        <div class="flex gap-6 mt-2">
+
+            <!-- 아니오 -->
+            <label class="view-radio-label
+                {% if saved.pain_tolerance == '아니오' %}
+                    view-radio-on
+                {% else %}
+                    view-radio-off
+                {% endif %}
+            ">
+                <input disabled type="radio" value="아니오"
+                       {% if saved.pain_tolerance == '아니오' %}checked{% endif %}>
+                아니오
+            </label>
+
+            <!-- 예 -->
+            <label class="view-radio-label
+                {% if saved.pain_tolerance == '예' %}
+                    view-radio-on
+                {% else %}
+                    view-radio-off
+                {% endif %}
+            ">
+                <input disabled type="radio" value="예"
+                       {% if saved.pain_tolerance == '예' %}checked{% endif %}>
+                예
+            </label>
+
+        </div>
+    </div>
+
+    <!-- 3. 통증 관련 특이사항 -->
+    {% if saved.pain_notes %}
+    <div>
+        <label class="font-semibold text-sky-700">
+            3. 통증 관련 특이사항
+        </label>
+
+        <input disabled type="text"
+               value="{{ saved.pain_notes }}"
+               class="w-full border rounded p-3 mt-2">
+    </div>
+    {% endif %}
+
+    <!-- 4. 위염 여부 -->
+    <div>
+        <label class="font-semibold text-sky-700">
+            4. 현재 위염을 진단받았거나 위염으로 인해 약을 복용하고 있나요?
+        </label>
+
+        <div class="flex gap-6 mt-2">
+
+            <!-- 아니오 -->
+            <label class="view-radio-label
+                {% if saved.gastritis == '아니오' %}
+                    view-radio-on
+                {% else %}
+                    view-radio-off
+                {% endif %}
+            ">
+                <input disabled type="radio" value="아니오"
+                       {% if saved.gastritis == '아니오' %}checked{% endif %}>
+                아니오
+            </label>
+
+            <!-- 예 -->
+            <label class="view-radio-label
+                {% if saved.gastritis == '예' %}
+                    view-radio-on
+                {% else %}
+                    view-radio-off
+                {% endif %}
+            ">
+                <input disabled type="radio" value="예"
+                       {% if saved.gastritis == '예' %}checked{% endif %}>
+                예
+            </label>
+
+        </div>
+    </div>
+
+    <!-- 5. 멀미 여부 -->
+    <div>
+        <label class="font-semibold text-sky-700">
+            5. 차량이나 기타 이동수단 이용 시 멀미가 있나요?
+        </label>
+
+        <div class="flex gap-6 mt-2">
+
+            <!-- 무 -->
+            <label class="view-radio-label
+                {% if saved.motion_sickness == '무' %}
+                    view-radio-on
+                {% else %}
+                    view-radio-off
+                {% endif %}
+            ">
+                <input disabled type="radio" value="무"
+                       {% if saved.motion_sickness == '무' %}checked{% endif %}>
+                무
+            </label>
+
+            <!-- 유 -->
+            <label class="view-radio-label
+                {% if saved.motion_sickness == '유' %}
+                    view-radio-on
+                {% else %}
+                    view-radio-off
+                {% endif %}
+            ">
+                <input disabled type="radio" value="유"
+                       {% if saved.motion_sickness == '유' %}checked{% endif %}>
+                유
+            </label>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

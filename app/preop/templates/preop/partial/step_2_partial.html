@@ -1,0 +1,27 @@
+{% extends "preop/step_readonly_base.html" %}
+{% block form_fields %}
+
+<!-- STEP 2 : 기본 신체 정보 및 주 증상 -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+    <div>
+        <label class="block text-sm font-semibold text-sky-700 mb-1">키 (cm)</label>
+        <input disabled type="number" value="{{ saved.height }}" class="w-full border rounded-lg px-3 py-2">
+    </div>
+
+    <div>
+        <label class="block text-sm font-semibold text-sky-700 mb-1">몸무게 (kg)</label>
+        <input disabled type="number" value="{{ saved.weight }}" class="w-full border rounded-lg px-3 py-2">
+    </div>
+</div>
+
+<div class="mb-3">
+    <label class="block text-sm font-semibold text-sky-700 mb-2">주 증상</label>
+    <textarea disabled rows="4" class="w-full border rounded-lg px-3 py-2">{{ saved.chief_complaint }}</textarea>
+</div>
+
+<div class="mb-6">
+    <label class="block text-sm font-semibold text-sky-700 mb-2">다치게 된 경위</label>
+    <textarea disabled rows="4" class="w-full border rounded-lg px-3 py-2">{{ saved.injury_cause }}</textarea>
+</div>
+
+{% endblock %}

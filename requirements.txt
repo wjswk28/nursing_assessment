@@ -1,0 +1,8 @@
+Flask
+Flask-SQLAlchemy
+Flask-Login
+gunicorn
+python-dotenv
+pandas
+openpyxl
+Werkzeug==2.3.7

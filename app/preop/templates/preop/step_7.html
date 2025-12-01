@@ -1,0 +1,141 @@
+{% extends "preop/step_base.html" %}
+{% set hide_nav = True %}
+{% set title = "치아 상태 평가" %}
+
+{% block form_fields %}
+
+<div class="space-y-4">
+
+    <!-- 1. 현재 치과 치료 여부 -->
+    <div class="disease-group">
+        <label class="font-semibold text-sky-700">1. 현재 치과 치료 여부</label>
+
+        <div class="flex gap-6 mt-3">
+            <label><input type="radio" name="dental_treatment" value="무"
+                class="radio-none"
+                {% if saved.dental_treatment == "무" %} checked {% endif %}> 무</label>
+
+            <label><input type="radio" name="dental_treatment" value="유"
+                class="radio-yes"
+                {% if saved.dental_treatment == "유" %} checked {% endif %}> 유</label>
+        </div>
+
+        <input type="text"
+               name="dental_treatment_desc"
+               value="{{ saved.dental_treatment_desc or '' }}"
+               class="w-full border rounded-lg px-3 py-2 mt-3 desc-box
+               {% if saved.dental_treatment != '유' %} hidden {% endif %}"
+               placeholder="치료 내용을 입력해주세요.">
+    </div>
+
+    <!-- 2. 치아 상태 평가 -->
+    <div>
+        <label class="font-semibold text-sky-700">2. 치아 상태 평가</label>
+
+        <div class="flex flex-col gap-2 mt-3">
+
+        <label class="flex items-center gap-2">
+            <input type="checkbox" name="tooth_normal" value="1"
+                {% if saved.tooth_normal == "1" %}checked{% endif %}>
+            이상 없음
+        </label>
+
+        <label class="flex items-center gap-2">
+            <input type="checkbox" name="tooth_cracked" value="1"
+                {% if saved.tooth_cracked == "1" %}checked{% endif %}>
+            깨져있는 치아
+        </label>
+
+        <label class="flex items-center gap-2">
+            <input type="checkbox" name="tooth_missing" value="1"
+                {% if saved.tooth_missing == "1" %}checked{% endif %}>
+            발치된 치아
+        </label>
+
+        <label class="flex items-center gap-2">
+            <input type="checkbox" name="tooth_mobile" value="1"
+                {% if saved.tooth_mobile == "1" %}checked{% endif %}>
+            흔들리는 치아
+        </label>
+
+        <label class="flex items-center gap-2">
+            <input type="checkbox" name="tooth_implant" value="1"
+                {% if saved.tooth_implant == "1" %}checked{% endif %}>
+            임플란트
+        </label>
+
+        <label class="flex items-center gap-2">
+            <input type="checkbox" name="tooth_brace" value="1"
+                {% if saved.tooth_brace == "1" %}checked{% endif %}>
+            교정기
+        </label>
+
+        <label class="flex items-center gap-2">
+            <input type="checkbox" name="tooth_prosthesis" value="1"
+                {% if saved.tooth_prosthesis == "1" %}checked{% endif %}>
+            보철기
+        </label>
+
+    </div>
+
+    </div>
+
+    <!-- 3. 기타 치아 관련 특이사항 -->
+    <div>
+        <label class="font-semibold text-sky-700">3. 기타 치아 관련 특이사항</label>
+        <input type="text" name="tooth_notes"
+               value="{{ saved.tooth_notes or '' }}"
+               class="w-full border rounded-lg px-3 py-2 mt-3"
+               placeholder="특이사항이 있다면 입력해주세요.">
+    </div>
+
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    /** ------------------------------------------------
+     *  1) 치과 치료 유/무에 따라 설명칸 표시
+     * ------------------------------------------------ */
+    document.querySelectorAll(".disease-group").forEach(group => {
+        const yes = group.querySelector(".radio-yes");
+        const no = group.querySelector(".radio-none");
+        const box = group.querySelector(".desc-box");
+
+        if (yes) yes.addEventListener("change", () => box.classList.remove("hidden"));
+        if (no) no.addEventListener("change", () => box.classList.add("hidden"));
+    });
+
+
+    /** ------------------------------------------------
+     *  2) 치아 상태 — "이상 없음" 단독 선택 기능
+     * ------------------------------------------------ */
+    const chkNormal = document.querySelector("input[name='tooth_normal']");
+    const others = document.querySelectorAll(
+        "input[name='tooth_cracked'], " +
+        "input[name='tooth_missing'], " +
+        "input[name='tooth_mobile'], " +
+        "input[name='tooth_implant'], " +
+        "input[name='tooth_brace'], " +
+        "input[name='tooth_prosthesis']"
+    );
+
+    if (chkNormal) {
+        chkNormal.addEventListener("change", () => {
+            if (chkNormal.checked) {
+                others.forEach(o => (o.checked = false));
+            }
+        });
+
+        others.forEach(o => {
+            o.addEventListener("change", () => {
+                if (o.checked) chkNormal.checked = false;
+            });
+        });
+    }
+
+});
+</script>
+
+{% endblock %}

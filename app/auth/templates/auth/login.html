@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}관리자 로그인{% endblock %}
+
+{% block content %}
+
+<style>
+  /* 부드러운 블루 그라데이션 배경 */
+  .login-bg {
+    background: linear-gradient(135deg, #eef7ff, #d9e8ff);
+  }
+
+  /* 유리 카드 효과 */
+  .glass-card {
+    backdrop-filter: blur(14px);
+    background: rgba(255, 255, 255, 0.55);
+  }
+</style>
+
+<div class="min-h-screen login-bg flex justify-center items-center px-6 py-10">
+
+  <!-- 전체 컨테이너 -->
+  <div class="w-full max-w-6xl bg-white md:bg-transparent 
+              md:flex rounded-2xl shadow-xl md:shadow-none">
+
+    <!-- =============================
+         좌측: 로고 & 소개 영역 (PC전용)
+         ============================= -->
+    <div class="hidden md:flex flex-col justify-center items-start 
+                w-1/2 rounded-l-2xl 
+                bg-gradient-to-br from-sky-700 to-indigo-800
+                text-white p-12 shadow-2xl">
+
+      <div class="flex items-center gap-3 mb-6">
+        <i data-lucide="stethoscope" class="w-10 h-10 text-white"></i>
+        <span class="text-2xl font-bold tracking-wide">
+          GAJA YONSEI HOSPITAL
+        </span>
+      </div>
+
+      <h1 class="text-4xl font-extrabold leading-snug mb-4">
+        Pre-Op Self-Check<br>
+        관리 시스템
+      </h1>
+
+      <p class="opacity-80 text-lg leading-relaxed">
+        수술 전 자가 간호사정 체크리스트를<br>
+        안전하고 체계적으로 관리하세요.
+      </p>
+    </div>
+
+    <!-- =============================
+         우측: 로그인 박스 (Glass Card)
+         ============================= -->
+    <div class="w-full md:w-1/2 p-10 flex justify-center items-center">
+
+      <div class="w-full max-w-sm glass-card rounded-2xl shadow-2xl p-8">
+
+        <div class="text-center mb-8">
+          <i data-lucide="log-in" class="w-10 h-10 text-sky-700 mx-auto mb-3"></i>
+          <h2 class="text-2xl font-bold text-sky-800">관리자 로그인</h2>
+        </div>
+
+        <form method="POST">
+
+          <!-- 아이디 -->
+          <label class="block text-sm font-medium text-slate-700 mb-1">아이디</label>
+          <input type="text" name="username" required
+                 class="w-full border border-slate-300 rounded-lg p-2.5 mb-4
+                        focus:outline-none focus:ring-2 focus:ring-sky-400">
+
+          <!-- 비밀번호 -->
+          <label class="block text-sm font-medium text-slate-700 mb-1">비밀번호</label>
+          <input type="password" name="password" required
+                 class="w-full border border-slate-300 rounded-lg p-2.5 mb-6
+                        focus:outline-none focus:ring-2 focus:ring-sky-400">
+
+          <!-- 로그인 버튼 -->
+          <button type="submit"
+                  class="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold
+                         py-2.5 rounded-lg transition-all">
+            로그인
+          </button>
+
+        </form>
+
+        <p class="text-center text-xs text-slate-400 mt-6">
+          © 2025 GAJA YONSEI HOSPITAL Pre-Op System
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}

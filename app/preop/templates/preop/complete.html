@@ -1,0 +1,41 @@
+{% extends "preop/step_base.html" %}
+{% set hide_nav = True %}
+{% set title = "문진 완료" %}
+
+{% block content %}
+
+<!-- 화면 중앙 정렬 -->
+<div class="min-h-screen flex items-start justify-center px-4 pt-6 pb-16">
+
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-lg border border-sky-100 py-10 px-6 text-center">
+
+        <!-- 병원명 -->
+        <div class="text-sky-700 font-semibold text-lg mb-2">
+            가자연세병원
+        </div>
+
+        <!-- 아이콘 + 문진 완료 -->
+        <i data-lucide="check-circle" class="w-16 h-16 text-sky-600 mx-auto mb-4"></i>
+        <h2 class="text-xl font-bold text-sky-800 mb-4">
+            수술 전 자가 체크리스트 완료
+        </h2>
+
+        <!-- 안내문 -->
+        <p class="text-slate-700 leading-relaxed mb-8 text-base">
+            모든 문진이 안전하게 제출되었습니다.<br><br>
+            <span class="font-semibold text-sky-700">수술 당일에는 금식(물 포함)과 금연을 꼭 지켜주세요.</span><br>
+            복용 중인 약물은<br>
+            <span class="text-slate-800 font-semibold">입원 시 병동 간호사가 안내해드립니다.</span>
+        </p>
+
+        <!-- 버튼 -->
+        <a href="https://www.goys.co.kr/"
+           class="inline-block bg-sky-600 hover:bg-sky-700 text-white font-semibold px-6 py-3 rounded-xl shadow transition">
+            병원 홈페이지로 이동
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}

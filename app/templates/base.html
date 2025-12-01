@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}가자연세병원 수술 전 자가 문진 시스템{% endblock %}</title>
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+</head>
+<body class="bg-slate-100">
+
+    <!-- 상단 네비게이션 (로그인된 상태만) -->
+    {% if current_user.is_authenticated and not hide_nav %}
+    <nav class="w-full bg-white shadow-md border-b border-sky-100 p-4 flex justify-between items-center">
+        <div class="text-sky-700 font-bold text-lg">
+            가자연세병원 Pre-Op Self-Check System
+        </div>
+        <div class="flex items-center gap-4 text-slate-700">
+            <span>{{ current_user.name or current_user.username }}</span>
+            <a href="{{ url_for('auth.logout') }}" class="text-red-600 hover:underline">로그아웃</a>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- 메인 콘텐츠 -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- 아이콘 로딩 -->
+    <script>
+        lucide.createIcons();
+    </script>
+
+</body>
+</html>

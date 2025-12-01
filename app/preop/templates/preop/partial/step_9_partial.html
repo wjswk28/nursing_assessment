@@ -1,0 +1,158 @@
+{% extends "preop/step_readonly_base.html" %}
+{% block form_fields %}
+
+<div class="space-y-3">
+
+    <!-- 1. 알러지 여부 -->
+    <div>
+        <label class="font-semibold text-sky-700">1. 알러지 여부</label>
+
+        <div class="flex gap-6 mt-2">
+
+            <!-- 무 -->
+            <label class="view-radio-label
+                {% if saved.allergy_main == '무' %}
+                    view-radio-on
+                {% else %}
+                    view-radio-off
+                {% endif %}
+            ">
+                <input disabled type="radio" value="무"
+                       {% if saved.allergy_main == '무' %}checked{% endif %}>
+                무
+            </label>
+
+            <!-- 유 -->
+            <label class="view-radio-label
+                {% if saved.allergy_main == '유' %}
+                    view-radio-on
+                {% else %}
+                    view-radio-off
+                {% endif %}
+            ">
+                <input disabled type="radio" value="유"
+                       {% if saved.allergy_main == '유' %}checked{% endif %}>
+                유
+            </label>
+
+        </div>
+
+        <!-- '유'일 때만 상세 정보 표시 -->
+        <div class="mt-4 space-y-4 {% if saved.allergy_main != '유' %}hidden{% endif %}">
+
+            {% set has_food = saved.allergy_food %}
+            {% set has_drug = saved.allergy_drug %}
+            {% set has_other = saved.allergy_other %}
+
+            {% if has_food %}
+            <div>
+                <label class="font-medium">음식 알러지</label>
+                <input disabled type="text"
+                       value="{{ has_food }}"
+                       class="w-full border rounded p-3 mt-1">
+            </div>
+            {% endif %}
+
+            {% if has_drug %}
+            <div>
+                <label class="font-medium">약물 알러지</label>
+                <input disabled type="text"
+                       value="{{ has_drug }}"
+                       class="w-full border rounded p-3 mt-1">
+            </div>
+            {% endif %}
+
+            {% if has_other %}
+            <div>
+                <label class="font-medium">기타</label>
+                <input disabled type="text"
+                       value="{{ has_other }}"
+                       class="w-full border rounded p-3 mt-1">
+            </div>
+            {% endif %}
+
+            {% if not has_food and not has_drug and not has_other %}
+            <p class="text-slate-500 text-sm">등록된 알러지 정보가 없습니다.</p>
+            {% endif %}
+        </div>
+    </div>
+
+
+    <!-- 2. 직계가족 병력 -->
+    <div>
+        <label class="font-semibold text-sky-700">2. 직계가족 병력</label>
+
+        <div class="flex gap-6 mt-2">
+
+            <!-- 무 -->
+            <label class="view-radio-label
+                {% if saved.family_main == '무' %}
+                    view-radio-on
+                {% else %}
+                    view-radio-off
+                {% endif %}
+            ">
+                <input disabled type="radio" value="무"
+                       {% if saved.family_main == '무' %}checked{% endif %}>
+                무
+            </label>
+
+            <!-- 유 -->
+            <label class="view-radio-label
+                {% if saved.family_main == '유' %}
+                    view-radio-on
+                {% else %}
+                    view-radio-off
+                {% endif %}
+            ">
+                <input disabled type="radio" value="유"
+                       {% if saved.family_main == '유' %}checked{% endif %}>
+                유
+            </label>
+
+        </div>
+
+        <div class="mt-4 space-y-4 {% if saved.family_main != '유' %}hidden{% endif %}">
+
+            {% if saved.family_htn_desc %}
+            <div>
+                <label class="font-medium">고혈압</label>
+                <input disabled type="text"
+                       value="{{ saved.family_htn_desc }}"
+                       class="w-full border rounded p-3 mt-1">
+            </div>
+            {% endif %}
+
+            {% if saved.family_dm_desc %}
+            <div>
+                <label class="font-medium">당뇨</label>
+                <input disabled type="text"
+                       value="{{ saved.family_dm_desc }}"
+                       class="w-full border rounded p-3 mt-1">
+            </div>
+            {% endif %}
+
+            {% if saved.family_stroke_desc %}
+            <div>
+                <label class="font-medium">뇌졸중</label>
+                <input disabled type="text"
+                       value="{{ saved.family_stroke_desc }}"
+                       class="w-full border rounded p-3 mt-1">
+            </div>
+            {% endif %}
+
+            {% if saved.family_cancer_desc %}
+            <div>
+                <label class="font-medium">암</label>
+                <input disabled type="text"
+                       value="{{ saved.family_cancer_desc }}"
+                       class="w-full border rounded p-3 mt-1">
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

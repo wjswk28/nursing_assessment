@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% set hide_nav = True %}
+{% block title %}수술 전 자가 간호사정 — 시작{% endblock %}
+
+{% block content %}
+
+<div class="min-h-screen flex items-center justify-center px-4">
+
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-lg border border-sky-100 
+                py-10 px-6 text-center">
+
+        <!-- 병원명 -->
+        <div class="mb-1 text-sky-700 font-semibold text-lg">
+            가자연세병원
+        </div>
+
+        <!-- 제목 -->
+        <div class="flex items-center justify-center gap-2 mb-4 mt-1">
+            <i data-lucide="clipboard-list" class="w-7 h-7 text-sky-700"></i>
+            <span class="text-sky-800 font-bold text-xl whitespace-nowrap">
+                수술 전 자가 간호사정
+            </span>
+        </div>
+
+        <!-- 환자 이름 -->
+        <p class="text-slate-700 text-lg font-semibold mb-1">
+            {{ patient.name }}님 환영합니다.
+        </p>
+
+        <p class="text-slate-500 text-sm leading-relaxed mb-6 text-center">
+            <br class="sm:hidden">입원 전 보호자와 함께 정확히 <br class="sm:hidden">작성해 주시면<br class="sm:hidden">
+            수술 준비 시간 단축과 정확한 환자<br class="sm:hidden"> 정보 전달이 이루어집니다.
+        </p>
+
+        <!-- 버튼 -->
+        <a href="{{ url_for('preop.form_step', token=patient.token, step=1) }}"
+           class="inline-block bg-sky-600 text-white font-semibold 
+                  px-6 py-3 rounded-xl shadow hover:bg-sky-700 transition">
+            시작하기
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}

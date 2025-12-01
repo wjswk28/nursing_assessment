@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block title %}Edit Patient{% endblock %}
+
+{% block navbar %}{% endblock %}
+
+{% block content %}
+
+<style>
+  .glass-card {
+      backdrop-filter: blur(18px);
+      background: rgba(255, 255, 255, 0.55);
+  }
+  .gender-btn.active {
+      background: #0284c7 !important;
+      color: white !important;
+      border-color: #0284c7 !important;
+  }
+</style>
+
+<div class="min-h-screen flex flex-col items-center justify-start px-6 py-10 bg-gradient-to-br from-sky-50 to-sky-100">
+
+    <!-- 상단 병원 로고 헤더 -->
+    <div class="flex items-center gap-3 mb-10">
+        <img src="/static/images/checklist_logo.png" class="h-12" alt="logo">
+        <span class="text-3xl font-bold text-sky-800">Edit Patient</span>
+    </div>
+
+    <!-- 글래스 카드 -->
+    <div class="glass-card max-w-4xl w-full rounded-2xl shadow-2xl border border-sky-200 p-10">
+
+        <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+            {% set label_class = "block text-sm font-semibold text-slate-600 mb-1" %}
+            {% set input_box = "flex items-center gap-2 border border-sky-200 rounded-xl px-4 py-3 bg-white focus-within:ring-2 focus-within:ring-sky-400" %}
+            {% set input_class = "w-full outline-none text-slate-700 placeholder-slate-400" %}
+
+            <!-- 1. 수술 날짜 -->
+            <div>
+                <label class="{{ label_class }}">수술 날짜</label>
+                <div class="{{ input_box }}">
+                    <i data-lucide="calendar" class="w-5 h-5 text-sky-600"></i>
+                    <input type="date" name="surgery_date" required class="{{ input_class }}"
+                           value="{{ patient.surgery_date }}">
+                </div>
+            </div>
+
+            <!-- 2. 등록번호 -->
+            <div>
+                <label class="{{ label_class }}">등록번호</label>
+                <div class="{{ input_box }}">
+                    <i data-lucide="hash" class="w-5 h-5 text-sky-600"></i>
+                    <input type="text" name="patient_id" required class="{{ input_class }}"
+                           value="{{ patient.patient_id }}">
+                </div>
+            </div>
+
+            <!-- 3. 이름 -->
+            <div>
+                <label class="{{ label_class }}">이름</label>
+                <div class="{{ input_box }}">
+                    <i data-lucide="user" class="w-5 h-5 text-sky-600"></i>
+                    <input type="text" name="name" required class="{{ input_class }}"
+                           value="{{ patient.name }}">
+                </div>
+            </div>
+
+            <!-- 4. 성별 버튼형 -->
+            <div>
+                <label class="{{ label_class }}">성별</label>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <button type="button"
+                        class="gender-btn border border-sky-200 rounded-xl py-3 text-center font-semibold text-sky-700 bg-white hover:bg-sky-100
+                        {% if patient.gender == 'M' %}active{% endif %}"
+                        onclick="selectGender('M', this)">
+                        남자
+                    </button>
+
+                    <button type="button"
+                        class="gender-btn border border-sky-200 rounded-xl py-3 text-center font-semibold text-sky-700 bg-white hover:bg-sky-100
+                        {% if patient.gender == 'F' %}active{% endif %}"
+                        onclick="selectGender('F', this)">
+                        여자
+                    </button>
+                </div>
+
+                <input type="hidden" id="gender" name="gender" value="{{ patient.gender }}" required>
+            </div>
+
+            <!-- 5. 나이 입력 -->
+            <div>
+                <label class="{{ label_class }}">나이</label>
+                <div class="{{ input_box }}">
+                    <i data-lucide="user-circle" class="w-5 h-5 text-sky-600"></i>
+                    <input type="number"
+                        name="age"
+                        min="0"
+                        max="120"
+                        class="{{ input_class }}"
+                        placeholder="나이 입력"
+                        value="{{ patient.age }}">
+                </div>
+            </div>
+
+
+            <!-- 6. 수술명 -->
+            <div>
+                <label class="{{ label_class }}">수술명</label>
+                <div class="{{ input_box }}">
+                    <i data-lucide="activity" class="w-5 h-5 text-sky-600"></i>
+                    <input type="text" name="surgery_name" required class="{{ input_class }}"
+                           value="{{ patient.surgery_name }}">
+                </div>
+            </div>
+
+            <!-- 7. 주치의 -->
+            <div>
+                <label class="{{ label_class }}">주치의</label>
+                <div class="{{ input_box }}">
+                    <i data-lucide="stethoscope" class="w-5 h-5 text-sky-600"></i>
+                    <select name="doctor_name" required class="w-full bg-white outline-none text-slate-700">
+                        <option value="최윤진" {% if patient.doctor_name == "최윤진" %}selected{% endif %}>최윤진</option>
+                        <option value="고민석" {% if patient.doctor_name == "고민석" %}selected{% endif %}>고민석</option>
+                        <option value="임경한" {% if patient.doctor_name == "임경한" %}selected{% endif %}>임경한</option>
+                        <option value="최윤석" {% if patient.doctor_name == "최윤석" %}selected{% endif %}>최윤석</option>
+                        <option value="박상준" {% if patient.doctor_name == "박상준" %}selected{% endif %}>박상준</option>
+                        <option value="엄광식" {% if patient.doctor_name == "엄광식" %}selected{% endif %}>엄광식</option>
+                    </select>
+                </div>
+            </div>
+            <!-- 전화번호 -->
+            <div>
+                <label class="{{ label_class }}">전화번호</label>
+                <div class="{{ input_box }}">
+                    <i data-lucide="phone" class="w-5 h-5 text-sky-600"></i>
+                    <input type="tel"
+                        name="phone"
+                        maxlength="13"
+                        placeholder="010-1234-5678"
+                        value="{{ patient.phone }}"
+                        oninput="this.value = this.value.replace(/[^0-9\-]/g,'');"
+                        class="{{ input_class }}">
+                </div>
+            </div>
+            <!-- 하단 버튼 영역 (폼 안으로 이동!) -->
+            <div class="col-span-1 md:col-span-2 flex justify-between items-center mt-4">
+
+                <!-- 목록으로 돌아가기 -->
+                <a href="{{ url_for('admin_preop.preop_list') }}"
+                class="px-6 py-3 rounded-xl bg-slate-200 text-slate-700 font-semibold 
+                        hover:bg-slate-300 transition shadow">
+                    목록으로 돌아가기
+                </a>
+
+                <!-- 저장 버튼 -->
+                <button type="submit"
+                    class="px-8 py-3 rounded-xl bg-gradient-to-r from-sky-600 to-sky-700 text-white font-bold
+                        hover:from-sky-700 hover:to-sky-800 transition shadow-lg">
+                    저장하기
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+<!-- 🔔 토스트 메시지 -->
+<div id="toast"
+     class="hidden fixed top-5 left-1/2 transform -translate-x-1/2 
+            bg-green-600 text-white py-3 px-6 rounded-lg shadow-lg z-50
+            transition opacity-0 duration-300">
+    환자 정보가 수정되었습니다.
+</div>
+
+<script>
+function selectGender(value, element) {
+    document.getElementById("gender").value = value;
+
+    document.querySelectorAll(".gender-btn").forEach(btn => {
+        btn.classList.remove("active");
+    });
+
+    element.classList.add("active");
+}
+
+// 🔔 토스트 메시지 자동 표시
+document.addEventListener("DOMContentLoaded", function () {
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                const toast = document.getElementById("toast");
+                toast.textContent = "{{ message }}";
+                toast.classList.remove("hidden");
+                toast.style.opacity = "1";
+
+                setTimeout(() => {
+                    toast.style.opacity = "0";
+                }, 2500);
+
+                setTimeout(() => {
+                    toast.classList.add("hidden");
+                }, 3000);
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+});
+</script>
+
+{% endblock %}

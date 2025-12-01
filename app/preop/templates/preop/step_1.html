@@ -1,0 +1,26 @@
+{% extends "preop/step_base.html" %}
+{% set title = "기본 정보 입력" %}
+
+{% block form_fields %}
+
+<!-- 이름 -->
+<label class="block mb-4">
+    <span class="text-sm font-medium">이름</span>
+    <input name="name"
+           class="w-full border rounded px-3 py-2"
+           required
+           value="{{ saved.name if saved.name else '' }}">
+</label>
+
+<!-- 수술 날짜 -->
+<label class="block mb-4">
+    <span class="text-sm font-medium">수술 날짜</span>
+    <input type="date"
+           name="surgery_date"
+           class="w-full border rounded px-3 py-2 text-slate-700"
+           required
+           value="{{ saved.surgery_date if saved.surgery_date else '' }}">
+</label>
+
+
+{% endblock %}

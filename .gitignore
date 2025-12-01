@@ -1,0 +1,9 @@
+instance/
+__pycache__/
+*.pyc
+*.db
+.env
+*.sqlite
+.env.*
+*.xlsx
+uploads/

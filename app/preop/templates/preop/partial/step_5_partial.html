@@ -1,0 +1,316 @@
+{% extends "preop/step_readonly_base.html" %}
+{% block form_fields %}
+
+<div class="space-y-3">
+
+    <!-- 1. 전신 상태 -->
+    <div>
+        <label class="font-semibold text-sky-700">1. 전신 상태</label>
+
+        <div class="flex gap-6 mt-2">
+
+            <!-- 양호 -->
+            <label class="view-checkbox-label
+                {% if saved.general_good == '1' %}view-checkbox-on{% else %}view-checkbox-off{% endif %}">
+                <input disabled type="checkbox" {% if saved.general_good == '1' %}checked{% endif %}>
+                양호
+            </label>
+
+            <!-- 허약함 -->
+            <label class="view-checkbox-label
+                {% if saved.general_poor == '1' %}view-checkbox-on{% else %}view-checkbox-off{% endif %}">
+                <input disabled type="checkbox" {% if saved.general_poor == '1' %}checked{% endif %}>
+                허약함
+            </label>
+
+        </div>
+    </div>
+
+    <!-- 2. 정서적 상태 -->
+    <div>
+        <label class="font-semibold text-sky-700">2. 정서적 상태</label>
+
+        <div class="flex gap-6 mt-2">
+
+            <!-- 양호 -->
+            <label class="view-radio-label
+                {% if saved.emotion == '양호' %}view-radio-on{% else %}view-radio-off{% endif %}">
+                <input disabled type="radio" value="양호"
+                    {% if saved.emotion == '양호' %}checked{% endif %}>
+                양호
+            </label>
+
+            <!-- 불안 -->
+            <label class="view-radio-label
+                {% if saved.emotion == '불안' %}view-radio-on{% else %}view-radio-off{% endif %}">
+                <input disabled type="radio" value="불안"
+                    {% if saved.emotion == '불안' %}checked{% endif %}>
+                불안
+            </label>
+
+            <!-- 기타 -->
+            <label class="view-radio-label
+                {% if saved.emotion == '기타' %}view-radio-on{% else %}view-radio-off{% endif %}">
+                <input disabled type="radio" value="기타"
+                    {% if saved.emotion == '기타' %}checked{% endif %}>
+                기타
+            </label>
+
+        </div>
+
+        {% if saved.emotion == '기타' and saved.emotion_desc %}
+        <input disabled type="text"
+               value="{{ saved.emotion_desc }}"
+               class="w-full border rounded p-3 mt-2">
+        {% endif %}
+    </div>
+
+    <!-- 3. 섭취 상태 -->
+    <div>
+        <label class="font-semibold text-sky-700">3. 섭취 상태</label>
+
+        <div class="flex gap-6 mt-2">
+
+            <label class="view-checkbox-label
+                {% if saved.eating_normal == '1' %}view-checkbox-on{% else %}view-checkbox-off{% endif %}">
+                <input disabled type="checkbox" {% if saved.eating_normal == '1' %}checked{% endif %}>
+                정상
+            </label>
+
+            <label class="view-checkbox-label
+                {% if saved.eating_dysphagia == '1' %}view-checkbox-on{% else %}view-checkbox-off{% endif %}">
+                <input disabled type="checkbox" {% if saved.eating_dysphagia == '1' %}checked{% endif %}>
+                연하곤란
+            </label>
+
+        </div>
+    </div>
+
+    <!-- 4. 최근 3개월 체중 감소 -->
+    <div>
+        <label class="font-semibold text-sky-700">4. 최근 3개월 체중 감소</label>
+
+        <div class="flex gap-6 mt-2">
+
+            <label class="view-radio-label
+                {% if saved.wtloss == '무' %}view-radio-on{% else %}view-radio-off{% endif %}">
+                <input disabled type="radio" value="무"
+                    {% if saved.wtloss == '무' %}checked{% endif %}>
+                무
+            </label>
+
+            <label class="view-radio-label
+                {% if saved.wtloss == '유' %}view-radio-on{% else %}view-radio-off{% endif %}">
+                <input disabled type="radio" value="유"
+                    {% if saved.wtloss == '유' %}checked{% endif %}>
+                유
+            </label>
+
+        </div>
+    </div>
+
+    <!-- 5. 치료식 -->
+    <div>
+        <label class="font-semibold text-sky-700">5. 치료식</label>
+
+        <div class="flex gap-6 mt-2">
+
+            <label class="view-radio-label
+                {% if saved.therapeutic_diet == '무' %}view-radio-on{% else %}view-radio-off{% endif %}">
+                <input disabled type="radio" value="무"
+                    {% if saved.therapeutic_diet == '무' %}checked{% endif %}>
+                무
+            </label>
+
+            <label class="view-radio-label
+                {% if saved.therapeutic_diet == '유' %}view-radio-on{% else %}view-radio-off{% endif %}">
+                <input disabled type="radio" value="유"
+                    {% if saved.therapeutic_diet == '유' %}checked{% endif %}>
+                유
+            </label>
+
+        </div>
+
+        {% if saved.therapeutic_diet == '유' and saved.therapeutic_diet_desc %}
+        <input disabled type="text"
+               value="{{ saved.therapeutic_diet_desc }}"
+               class="w-full border rounded p-3 mt-2">
+        {% endif %}
+    </div>
+
+    <!-- 6. 시력 -->
+    <div>
+        <label class="font-semibold text-sky-700">6. 시력장애</label>
+
+        <div class="flex gap-6 mt-2">
+
+            <label class="view-radio-label
+                {% if saved.vision == '무' %}view-radio-on{% else %}view-radio-off{% endif %}">
+                <input disabled type="radio" value="무"
+                    {% if saved.vision == '무' %}checked{% endif %}>
+                무
+            </label>
+
+            <label class="view-radio-label
+                {% if saved.vision == '유' %}view-radio-on{% else %}view-radio-off{% endif %}">
+                <input disabled type="radio" value="유"
+                    {% if saved.vision == '유' %}checked{% endif %}>
+                유
+            </label>
+
+        </div>
+
+        {% if saved.vision == '유' %}
+        <div class="flex gap-6 mt-2">
+            {% if saved.vision_glasses == '1' %}
+            <label class="view-checkbox-label view-checkbox-on">
+                <input disabled type="checkbox" checked> 안경
+            </label>
+            {% endif %}
+
+            {% if saved.vision_lens == '1' %}
+            <label class="view-checkbox-label view-checkbox-on">
+                <input disabled type="checkbox" checked> 렌즈
+            </label>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- 7. 청력 -->
+    <div>
+        <label class="font-semibold text-sky-700">7. 청력장애</label>
+
+        <div class="flex gap-6 mt-2">
+
+            <label class="view-radio-label
+                {% if saved.hearing == '무' %}view-radio-on{% else %}view-radio-off{% endif %}">
+                <input disabled type="radio" value="무"
+                    {% if saved.hearing == '무' %}checked{% endif %}>
+                무
+            </label>
+
+            <label class="view-radio-label
+                {% if saved.hearing == '유' %}view-radio-on{% else %}view-radio-off{% endif %}">
+                <input disabled type="radio" value="유"
+                    {% if saved.hearing == '유' %}checked{% endif %}>
+                유
+            </label>
+
+        </div>
+
+        {% if saved.hearing == '유' %}
+        <div class="flex gap-6 mt-2">
+
+            {% if saved.hearing_aid == '1' %}
+            <label class="view-checkbox-label view-checkbox-on">
+                <input disabled type="checkbox" checked> 보청기
+            </label>
+            {% endif %}
+
+            {% if saved.hearing_right == '1' %}
+            <label class="view-checkbox-label view-checkbox-on">
+                <input disabled type="checkbox" checked> 오른쪽
+            </label>
+            {% endif %}
+
+            {% if saved.hearing_left == '1' %}
+            <label class="view-checkbox-label view-checkbox-on">
+                <input disabled type="checkbox" checked> 왼쪽
+            </label>
+            {% endif %}
+
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- 8. 수면 -->
+    <div>
+        <label class="font-semibold text-sky-700">8. 수면장애</label>
+
+        <div class="flex gap-6 mt-2">
+
+            <label class="view-radio-label
+                {% if saved.sleep == '무' %}view-radio-on{% else %}view-radio-off{% endif %}">
+                <input disabled type="radio" value="무"
+                    {% if saved.sleep == '무' %}checked{% endif %}>
+                무
+            </label>
+
+            <label class="view-radio-label
+                {% if saved.sleep == '유' %}view-radio-on{% else %}view-radio-off{% endif %}">
+                <input disabled type="radio" value="유"
+                    {% if saved.sleep == '유' %}checked{% endif %}>
+                유
+            </label>
+
+        </div>
+
+        {% if saved.sleep == '유' and saved.sleep_desc %}
+        <input disabled type="text"
+               value="{{ saved.sleep_desc }}"
+               class="w-full border rounded p-3 mt-2">
+        {% endif %}
+    </div>
+
+    <!-- 9. 배변 -->
+    <div>
+        <label class="font-semibold text-sky-700">9. 배변장애</label>
+
+        <div class="flex gap-6 mt-2">
+
+            <label class="view-radio-label
+                {% if saved.bowel == '무' %}view-radio-on{% else %}view-radio-off{% endif %}">
+                <input disabled type="radio" value="무"
+                    {% if saved.bowel == '무' %}checked{% endif %}>
+                무
+            </label>
+
+            <label class="view-radio-label
+                {% if saved.bowel == '유' %}view-radio-on{% else %}view-radio-off{% endif %}">
+                <input disabled type="radio" value="유"
+                    {% if saved.bowel == '유' %}checked{% endif %}>
+                유
+            </label>
+
+        </div>
+
+        {% if saved.bowel == '유' and saved.bowel_desc %}
+        <input disabled type="text"
+               value="{{ saved.bowel_desc }}"
+               class="w-full border rounded p-3 mt-2">
+        {% endif %}
+    </div>
+
+    <!-- 10. 배뇨 -->
+    <div>
+        <label class="font-semibold text-sky-700">10. 배뇨장애</label>
+
+        <div class="flex gap-6 mt-2">
+
+            <label class="view-radio-label
+                {% if saved.urination == '무' %}view-radio-on{% else %}view-radio-off{% endif %}">
+                <input disabled type="radio" value="무"
+                    {% if saved.urination == '무' %}checked{% endif %}>
+                무
+            </label>
+
+            <label class="view-radio-label
+                {% if saved.urination == '유' %}view-radio-on{% else %}view-radio-off{% endif %}">
+                <input disabled type="radio" value="유"
+                    {% if saved.urination == '유' %}checked{% endif %}>
+                유
+            </label>
+
+        </div>
+
+        {% if saved.urination == '유' and saved.urination_desc %}
+        <input disabled type="text"
+               value="{{ saved.urination_desc }}"
+               class="w-full border rounded p-3 mt-2">
+        {% endif %}
+    </div>
+
+</div>
+
+{% endblock %}

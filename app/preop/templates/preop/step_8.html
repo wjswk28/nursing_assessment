@@ -1,0 +1,124 @@
+{% extends "preop/step_base.html" %}
+{% set hide_nav = True %}
+{% set title = "음주 & 흡연 평가" %}
+
+{% block form_fields %}
+
+<div class="space-y-4">
+
+    <!-- 1. 음주 -->
+    <div class="disease-group" data-field="alcohol">
+        <label class="font-semibold text-sky-700">1. 음주 여부</label>
+
+        <div class="flex gap-6 mt-3">
+            <label>
+                <input type="radio" name="alcohol" value="무"
+                       class="radio-none"
+                       {% if saved.alcohol == "무" %} checked {% endif %}> 무
+            </label>
+
+            <label>
+                <input type="radio" name="alcohol" value="유"
+                       class="radio-yes"
+                       {% if saved.alcohol == "유" %} checked {% endif %}> 유
+            </label>
+        </div>
+
+        <!-- 음주 빈도 -->
+        <div class="mt-4 space-y-3 desc-box {% if saved.alcohol != '유' %} hidden {% endif %}">
+            <label class="block font-medium text-slate-700">음주 빈도</label>
+
+            {% set freq = saved.alcohol_frequency or '' %}
+
+            <div class="grid grid-cols-2 gap-3">
+                <label><input type="checkbox" name="alcohol_frequency" value="1~2회"
+                    {% if "1~2회" in freq %} checked {% endif %}> 1~2회</label>
+
+                <label><input type="checkbox" name="alcohol_frequency" value="2~3회"
+                    {% if "2~3회" in freq %} checked {% endif %}> 2~3회</label>
+
+                <label><input type="checkbox" name="alcohol_frequency" value="4~5회"
+                    {% if "4~5회" in freq %} checked {% endif %}> 4~5회</label>
+
+                <label><input type="checkbox" name="alcohol_frequency" value="매일"
+                    {% if "매일" in freq %} checked {% endif %}> 매일</label>
+            </div>
+        </div>
+
+        <!-- 술 종류 -->
+        <div class="mt-4 space-y-3 desc-box {% if saved.alcohol != '유' %} hidden {% endif %}">
+            <label class="block font-medium text-slate-700">술 종류</label>
+
+            <div class="grid grid-cols-2 gap-3">
+                <label><input type="checkbox" name="alcohol_type_beer" value="1"
+                    {% if saved.alcohol_type_beer == "1" %} checked {% endif %}> 맥주</label>
+
+                <label><input type="checkbox" name="alcohol_type_soju" value="1"
+                    {% if saved.alcohol_type_soju == "1" %} checked {% endif %}> 소주</label>
+
+                <label><input type="checkbox" name="alcohol_type_whisky" value="1"
+                    {% if saved.alcohol_type_whisky == "1" %} checked {% endif %}> 위스키</label>
+
+                <label><input type="checkbox" name="alcohol_type_wine" value="1"
+                    {% if saved.alcohol_type_wine == "1" %} checked {% endif %}> 와인</label>
+            </div>
+
+            <input type="text" name="alcohol_type_other"
+                   value="{{ saved.alcohol_type_other or '' }}"
+                   class="w-full border rounded-lg px-3 py-2"
+                   placeholder="기타 (있다면 입력)">
+        </div>
+
+        <!-- 1회 음주량 -->
+        <div class="mt-4 desc-box {% if saved.alcohol != '유' %} hidden {% endif %}">
+            <label class="block font-medium text-slate-700 mb-1">1회에 마시는 술의 양</label>
+            <input type="text" name="alcohol_amount"
+                   value="{{ saved.alcohol_amount or '' }}"
+                   class="w-full border rounded-lg px-3 py-2"
+                   placeholder="예: 맥주 한 캔, 소주 반병 등">
+        </div>
+
+    </div>
+
+    <!-- 2. 흡연 -->
+    <div class="disease-group" data-field="smoking">
+        <label class="font-semibold text-sky-700">2. 흡연 여부</label>
+
+        <div class="flex gap-6 mt-3">
+            <label>
+                <input type="radio" name="smoking" value="무"
+                       class="radio-none"
+                       {% if saved.smoking == "무" %} checked {% endif %}> 무
+            </label>
+
+            <label>
+                <input type="radio" name="smoking" value="유"
+                       class="radio-yes"
+                       {% if saved.smoking == "유" %} checked {% endif %}> 유
+            </label>
+        </div>
+
+        <input type="text" name="smoking_amount"
+               value="{{ saved.smoking_amount or '' }}"
+               class="w-full border rounded-lg px-3 py-2 mt-3 desc-box
+                      {% if saved.smoking != '유' %} hidden {% endif %}"
+               placeholder="1일 흡연량 (예: 반갑, 한갑)">
+    </div>
+
+</div>
+
+<!-- 유 선택 시 자동 표시 -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".disease-group").forEach(group => {
+        const yes = group.querySelector(".radio-yes");
+        const no = group.querySelector(".radio-none");
+        const boxes = group.querySelectorAll(".desc-box");
+
+        if (yes) yes.addEventListener("change", () => boxes.forEach(b => b.classList.remove("hidden")));
+        if (no) no.addEventListener("change", () => boxes.forEach(b => b.classList.add("hidden")));
+    });
+});
+</script>
+
+{% endblock %}

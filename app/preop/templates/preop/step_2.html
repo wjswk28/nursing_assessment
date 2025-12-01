@@ -1,0 +1,44 @@
+{% extends "preop/step_base.html" %}
+{% set hide_nav = True %}
+{% set title = "기본 신체 정보 및 주 증상" %}
+
+{% block form_fields %}
+
+<div class="space-y-4">
+
+    <!-- 키/몸무게 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm font-semibold text-sky-700 mb-1">키 (cm)</label>
+            <input type="number" name="height"
+                   value="{{ saved.height or '' }}"
+                   class="w-full border border-sky-200 rounded-lg px-3 py-2">
+        </div>
+
+        <div>
+            <label class="block text-sm font-semibold text-sky-700 mb-1">몸무게 (kg)</label>
+            <input type="number" name="weight"
+                   value="{{ saved.weight or '' }}"
+                   class="w-full border border-sky-200 rounded-lg px-3 py-2">
+        </div>
+    </div>
+
+    <!-- 주증상 -->
+    <div>
+        <label class="block text-sm font-semibold text-sky-700 mb-2">주 증상</label>
+        <textarea name="chief_complaint" rows="4"
+                  class="w-full border border-sky-200 rounded-lg px-3 py-2"
+                  placeholder="현재 가장 불편한 증상을 자세히 적어주세요.">{{ saved.chief_complaint or '' }}</textarea>
+    </div>
+
+    <!-- 다치게 된 경위 -->
+    <div>
+        <label class="block text-sm font-semibold text-sky-700 mb-2">다치게 된 경위</label>
+        <textarea name="injury_cause" rows="4"
+                  class="w-full border border-sky-200 rounded-lg px-3 py-2"
+                  placeholder="어떻게 다치게 되었는지 자세히 적어주세요.">{{ saved.injury_cause or '' }}</textarea>
+    </div>
+
+</div>
+
+{% endblock %}

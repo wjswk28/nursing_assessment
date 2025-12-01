@@ -1,0 +1,65 @@
+{% extends "preop/step_base.html" %}
+{% set hide_nav = True %}
+{% set title = "기저질환 및 상태 확인" %}
+
+{% block form_fields %}
+<div class="space-y-4">
+
+    {% set items = [
+        (1, "고혈압", "htn", "복용약 또는 혈압 수치를 입력하세요", False),
+        (2, "심장질환", "heart", "어떤 심장질환인지 입력하세요", True),
+        (3, "당뇨", "dm", "복용약 또는 인슐린 여부를 입력하세요", False),
+        (4, "뇌졸중", "stroke", "어떤 질환인지 입력하세요", True),
+        (5, "천식", "asthma", "호흡기를 사용하나요?", True),
+        (6, "갑상선 질환", "thyroid", "약을 복용 중인가요?", True),
+        (7, "위장 질환", "gi", "어떤 질환인지 입력하세요", True),
+        (8, "간염", "hepatitis", "A/B/C형 중 어느 타입인가요?", True),
+        (9, "결핵", "tb", "치료 여부 및 시기 작성", True),
+        (10, "류마티스 관절염", "ra", "복용약 또는 증상 작성", False),
+        (11, "수술부위 상처", "wound", "상처의 위치와 상태를 입력하세요", True)
+    ] %}
+
+    {% for num, label, field, ph, need_desc in items %}
+    <div class="disease-group">
+        <label class="font-semibold text-sky-700">{{ num }}. {{ label }}</label>
+
+        <div class="flex items-center gap-6 mt-2">
+            <label><input type="radio" name="{{ field }}" value="무" {% if saved[field]=="무" %}checked{% endif %}> 무</label>
+            <label><input type="radio" name="{{ field }}" value="유" {% if saved[field]=="유" %}checked{% endif %}> 유</label>
+        </div>
+
+        {% if need_desc %}
+            <input name="{{ field }}_desc"
+                class="w-full border rounded p-2 mt-2 {% if saved[field] != '유' %}hidden{% endif %}"
+                value="{{ saved[field ~ '_desc'] or '' }}"
+                data-placeholder="{{ ph }}"
+                placeholder="{{ ph }}">
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".disease-group").forEach(g => {
+        const yes = g.querySelector("input[value='유']");
+        const no  = g.querySelector("input[value='무']");
+        const box = g.querySelector("input[name$='_desc']");
+
+        // 🔥 입력칸 없는 항목은 그냥 skip
+        if (!box) return;
+
+        yes.addEventListener("change", () => {
+            box.classList.remove("hidden");
+            box.placeholder = box.dataset.placeholder; 
+        });
+
+        no.addEventListener("change", () => {
+            box.classList.add("hidden");
+            box.value = "";
+        });
+    });
+});
+</script>
+
+{% endblock %}

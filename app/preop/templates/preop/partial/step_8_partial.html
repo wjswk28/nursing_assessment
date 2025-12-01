@@ -1,0 +1,113 @@
+{% extends "preop/step_readonly_base.html" %}
+{% block form_fields %}
+
+<div class="space-y-3">
+
+    <!-- 1. 음주 여부 -->
+    <div>
+        <label class="font-semibold text-sky-700">1. 음주 여부</label>
+
+        <div class="flex gap-6 mt-2">
+
+            <!-- 무 -->
+            <label class="view-radio-label
+                {% if saved.alcohol == '무' %}
+                    view-radio-on
+                {% else %}
+                    view-radio-off
+                {% endif %}
+            ">
+                <input disabled type="radio" value="무"
+                       {% if saved.alcohol == '무' %}checked{% endif %}>
+                무
+            </label>
+
+            <!-- 유 -->
+            <label class="view-radio-label
+                {% if saved.alcohol == '유' %}
+                    view-radio-on
+                {% else %}
+                    view-radio-off
+                {% endif %}
+            ">
+                <input disabled type="radio" value="유"
+                       {% if saved.alcohol == '유' %}checked{% endif %}>
+                유
+            </label>
+
+        </div>
+
+        {% if saved.alcohol == '유' %}
+            {% if saved.alcohol_frequency %}
+            <div class="mt-3">
+                <label class="font-medium mb-1">음주 빈도</label>
+                <input disabled type="text"
+                       value="{{ saved.alcohol_frequency }}"
+                       class="w-full border rounded p-3 mt-1">
+            </div>
+            {% endif %}
+
+            {% if saved.alcohol_type_other %}
+            <div class="mt-3">
+                <label class="font-medium mb-1">술 종류</label>
+                <input disabled type="text"
+                       value="{{ saved.alcohol_type_other }}"
+                       class="w-full border rounded p-3 mt-1">
+            </div>
+            {% endif %}
+
+            {% if saved.alcohol_amount %}
+            <div class="mt-3">
+                <label class="font-medium mb-1">1회 음주량</label>
+                <input disabled type="text"
+                       value="{{ saved.alcohol_amount }}"
+                       class="w-full border rounded p-3 mt-1">
+            </div>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    <!-- 2. 흡연 여부 -->
+    <div>
+        <label class="font-semibold text-sky-700">2. 흡연 여부</label>
+
+        <div class="flex gap-6 mt-2">
+
+            <!-- 무 -->
+            <label class="view-radio-label
+                {% if saved.smoking == '무' %}
+                    view-radio-on
+                {% else %}
+                    view-radio-off
+                {% endif %}
+            ">
+                <input disabled type="radio" value="무"
+                       {% if saved.smoking == '무' %}checked{% endif %}>
+                무
+            </label>
+
+            <!-- 유 -->
+            <label class="view-radio-label
+                {% if saved.smoking == '유' %}
+                    view-radio-on
+                {% else %}
+                    view-radio-off
+                {% endif %}
+            ">
+                <input disabled type="radio" value="유"
+                       {% if saved.smoking == '유' %}checked{% endif %}>
+                유
+            </label>
+
+        </div>
+
+        {% if saved.smoking == '유' and saved.smoking_amount %}
+        <input disabled type="text"
+               value="{{ saved.smoking_amount }}"
+               class="w-full border rounded p-3 mt-2">
+        {% endif %}
+    </div>
+
+</div>
+
+{% endblock %}

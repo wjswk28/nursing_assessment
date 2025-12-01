@@ -1,0 +1,159 @@
+{% extends "preop/step_base.html" %}
+{% set hide_nav = True %}
+{% set title = "복용약 및 과거 수술 경험" %}
+
+{% block form_fields %}
+
+<div class="space-y-4">
+
+    <!-- 1. 복용 중인 경구약 -->
+    <div class="disease-group" data-field="oral_med">
+        <label class="font-semibold text-sky-700">1. 복용 중인 경구약</label>
+
+        <div class="flex items-center gap-6 mt-2">
+            <label>
+                <input type="radio" name="oral_med" value="무"
+                       class="radio-none"
+                       {% if saved.oral_med == "무" %} checked {% endif %}> 무
+            </label>
+
+            <label>
+                <input type="radio" name="oral_med" value="유"
+                       class="radio-yes"
+                       {% if saved.oral_med == "유" %} checked {% endif %}> 유
+            </label>
+        </div>
+
+        <!-- 설명 -->
+        <input name="oral_med_desc"
+               value="{{ saved.oral_med_desc or '' }}"
+               class="w-full border rounded-lg px-3 py-2 mt-3 desc-box
+                      {% if saved.oral_med != '유' %} hidden {% endif %}"
+               placeholder="복용 중인 약을 입력해주세요.">
+
+        <!-- 사진 첨부 -->
+        <div class="mt-3 desc-box {% if saved.oral_med != '유' %} hidden {% endif %}">
+            <label class="block text-sm mb-1 text-slate-700">관련 사진 첨부 (선택)</label>
+            <input type="file"
+                   name="oral_med_image"
+                   accept="image/*"
+                   capture="camera"
+                   class="w-full border rounded-lg px-3 py-2">
+        </div>
+    </div>
+
+    <!-- 2. 입원 및 과거 수술 경험 -->
+    <div class="disease-group" data-field="surgery_history">
+        <label class="font-semibold text-sky-700">2. 입원 및 과거 수술 경험</label>
+
+        <div class="flex items-center gap-6 mt-2">
+            <label>
+                <input type="radio" name="surgery_history" value="무"
+                       class="radio-none"
+                       {% if saved.surgery_history == "무" %} checked {% endif %}> 무
+            </label>
+
+            <label>
+                <input type="radio" name="surgery_history" value="유"
+                       class="radio-yes"
+                       {% if saved.surgery_history == "유" %} checked {% endif %}> 유
+            </label>
+        </div>
+
+        <!-- 설명 -->
+        <div id="surgery-history-wrapper"
+            class="space-y-2 mt-3 desc-box {% if saved.surgery_history != '유' %} hidden {% endif %}">
+            
+            {% if saved.surgery_history_desc_list %}
+                {% for item in saved.surgery_history_desc_list %}
+                    <div class="flex gap-2 surgery-item">
+                        <input name="surgery_history_desc[]" 
+                            value="{{ item }}"
+                            class="w-full border rounded-lg px-3 py-2">
+                        <button type="button"
+                                class="remove-btn text-red-500 font-bold px-2">−</button>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <!-- 기본 1칸 생성 -->
+                <div class="flex gap-2 surgery-item">
+                    <input name="surgery_history_desc[]" 
+                        class="w-full border rounded-lg px-3 py-2"
+                        placeholder="예: 2020년 오른쪽 무릎 인공관절수술.">
+                    <button type="button"
+                            class="remove-btn text-red-500 font-bold px-2">−</button>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- + 추가 버튼 -->
+        <button type="button"
+                id="add-surgery-btn"
+                class="mt-2 px-3 py-1 bg-sky-600 text-white rounded-md
+                    {% if saved.surgery_history != '유' %} hidden {% endif %}">
+            + 추가
+        </button>
+
+    </div>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    /* =====================================
+       🔵 유/무 선택 시 desc-box 자동 표시
+       ===================================== */
+    document.querySelectorAll(".disease-group").forEach(group => {
+        const yes = group.querySelector(".radio-yes");
+        const no = group.querySelector(".radio-none");
+        const boxes = group.querySelectorAll(".desc-box");
+
+        if (yes) {
+            yes.addEventListener("change", () => {
+                boxes.forEach(b => b.classList.remove("hidden"));
+            });
+        }
+
+        if (no) {
+            no.addEventListener("change", () => {
+                boxes.forEach(b => b.classList.add("hidden"));
+            });
+        }
+    });
+
+
+    /* =====================================
+       🔵 “과거 수술 경험 - 추가하기” 기능
+       ===================================== */
+    const wrapper = document.getElementById("surgery-history-wrapper");
+    const addBtn = document.getElementById("add-surgery-btn");
+
+    // 추가 버튼 클릭 시 입력 칸 추가
+    if (addBtn && wrapper) {
+        addBtn.addEventListener("click", () => {
+            const div = document.createElement("div");
+            div.className = "flex gap-2 surgery-item";
+
+            div.innerHTML = `
+                <input name="surgery_history_desc[]" 
+                       class="w-full border rounded-lg px-3 py-2"
+                       placeholder="예: 2021년 왼쪽 무릎 반월상연골 수술">
+                <button type="button" class="remove-btn text-red-500 font-bold px-2">−</button>
+            `;
+            wrapper.appendChild(div);
+        });
+    }
+
+    // 동적으로 추가된 삭제 버튼 기능
+    document.addEventListener("click", (e) => {
+        if (e.target.classList.contains("remove-btn")) {
+            e.target.closest(".surgery-item").remove();
+        }
+    });
+
+});
+</script>
+
+
+{% endblock %}

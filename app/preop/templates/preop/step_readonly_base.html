@@ -1,0 +1,42 @@
+<!-- preop/step_readonly_base.html -->
+
+<style>
+    .view-radio-label {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 15px;
+    }
+
+    .view-radio-off {
+        color: #9ca3af;
+        font-weight: normal;
+    }
+
+    .view-radio-on {
+        color: #000;
+        font-weight: 700;
+    }
+    .view-checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 15px;
+    }
+
+    /* 체크되지 않은 체크박스는 흐리게 */
+    .view-checkbox-off {
+        color: #9ca3af;
+        font-weight: normal;
+    }
+
+    /* 체크된 체크박스 강조 */
+    .view-checkbox-on {
+        color: #000;
+        font-weight: 700;
+    }
+</style>
+
+<div class="pointer-events-none opacity-100">
+    {% block form_fields %}{% endblock %}
+</div>

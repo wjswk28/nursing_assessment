@@ -1,0 +1,66 @@
+{% extends "preop/step_readonly_base.html" %}
+{% block form_fields %}
+
+<div class="space-y-3">
+
+    {% set items = [
+        (1, "고혈압", "htn"),
+        (2, "심장질환", "heart"),
+        (3, "당뇨", "dm"),
+        (4, "뇌졸중", "stroke"),
+        (5, "천식", "asthma"),
+        (6, "갑상선 질환", "thyroid"),
+        (7, "위장 질환", "gi"),
+        (8, "간염", "hepatitis"),
+        (9, "결핵", "tb"),
+        (10, "류마티스 관절염", "ra"),
+        (11, "수술부위 상처", "wound")
+    ] %}
+
+    {% for num, label, field in items %}
+    <div class="mb-4">
+        <label class="font-semibold text-sky-700">{{ num }}. {{ label }}</label>
+
+        <div class="flex items-center gap-6 mt-1">
+
+            <!-- 무 -->
+            <label class="view-radio-label
+                {% if saved[field] == '무' %}
+                    view-radio-on
+                {% else %}
+                    view-radio-off
+                {% endif %}
+            ">
+                <input disabled type="radio" value="무"
+                       {% if saved[field] == "무" %}checked{% endif %}>
+                무
+            </label>
+
+            <!-- 유 -->
+            <label class="view-radio-label
+                {% if saved[field] == '유' %}
+                    view-radio-on
+                {% else %}
+                    view-radio-off
+                {% endif %}
+            ">
+                <input disabled type="radio" value="유"
+                       {% if saved[field] == "유" %}checked{% endif %}>
+                유
+            </label>
+
+        </div>
+
+        <!-- 설명 입력칸: 유일때만 표시 -->
+        {% set desc = saved[field + '_desc'] %}
+        {% if saved[field] == '유' and desc %}
+        <input disabled type="text"
+               value="{{ desc }}"
+               class="w-full border rounded p-2 mt-2">
+        {% endif %}
+    </div>
+    {% endfor %}
+
+</div>
+
+{% endblock %}

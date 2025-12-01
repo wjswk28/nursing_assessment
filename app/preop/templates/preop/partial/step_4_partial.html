@@ -1,0 +1,84 @@
+{% extends "preop/step_readonly_base.html" %}
+{% block form_fields %}
+
+<div class="space-y-3">
+
+    <!-- 1. 경구약 -->
+    <div>
+        <label class="font-semibold text-sky-700">1. 복용 중인 경구약</label>
+
+        <div class="flex items-center gap-6 mt-1">
+
+            <!-- 무 -->
+            <label class="view-radio-label
+                {% if saved.oral_med == '무' %}
+                    view-radio-on
+                {% else %}
+                    view-radio-off
+                {% endif %}
+            ">
+                <input disabled type="radio" name="oral_med" value="무"
+                       {% if saved.oral_med == "무" %}checked{% endif %}> 무
+            </label>
+
+            <!-- 유 -->
+            <label class="view-radio-label
+                {% if saved.oral_med == '유' %}
+                    view-radio-on
+                {% else %}
+                    view-radio-off
+                {% endif %}
+            ">
+                <input disabled type="radio" name="oral_med" value="유"
+                       {% if saved.oral_med == "유" %}checked{% endif %}> 유
+            </label>
+        </div>
+
+        {% if saved.oral_med == '유' and saved.oral_med_desc %}
+        <input disabled type="text"
+               value="{{ saved.oral_med_desc }}"
+               class="w-full border rounded p-2 mt-2">
+        {% endif %}
+    </div>
+
+    <!-- 2. 과거 수술 -->
+    <div>
+        <label class="font-semibold text-sky-700">2. 입원 및 과거 수술 경험</label>
+
+        <div class="flex items-center gap-6 mt-1">
+
+            <!-- 무 -->
+            <label class="view-radio-label
+                {% if saved.surgery_history == '무' %}
+                    view-radio-on
+                {% else %}
+                    view-radio-off
+                {% endif %}
+            ">
+                <input disabled type="radio" name="surgery_history" value="무"
+                       {% if saved.surgery_history == "무" %}checked{% endif %}> 무
+            </label>
+
+            <!-- 유 -->
+            <label class="view-radio-label
+                {% if saved.surgery_history == '유' %}
+                    view-radio-on
+                {% else %}
+                    view-radio-off
+                {% endif %}
+            ">
+                <input disabled type="radio" name="surgery_history" value="유"
+                       {% if saved.surgery_history == "유" %}checked{% endif %}> 유
+            </label>
+        </div>
+
+        {% if saved.surgery_history == '유' and saved.surgery_history_desc %}
+        <input disabled type="text"
+               value="{{ saved.surgery_history_desc }}"
+               class="w-full border rounded p-2 mt-2">
+        {% endif %}
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,181 @@
+{% extends "preop/step_base.html" %}
+{% set hide_nav = True %}
+{% set title = "알러지 & 가족력 평가" %}
+
+{% block form_fields %}
+
+<div class="space-y-4">
+
+    <!-- 1. 알러지 여부 -->
+    <div class="disease-group" data-field="allergy_main">
+        <label class="font-semibold text-sky-700 text-lg">1. 알러지 여부</label>
+
+        <!-- 유/무 선택 -->
+        <div class="flex gap-6 mt-3">
+            <label>
+                <input type="radio" name="allergy_main" value="무"
+                       class="radio-none"
+                       {% if saved.allergy_main == "무" %} checked {% endif %}> 무
+            </label>
+
+            <label>
+                <input type="radio" name="allergy_main" value="유"
+                       class="radio-yes"
+                       {% if saved.allergy_main == "유" %} checked {% endif %}> 유
+            </label>
+        </div>
+
+        <!-- 하위 알러지 상세 -->
+        <div class="mt-5 space-y-6 desc-box {% if saved.allergy_main != '유' %} hidden {% endif %}">
+
+            <!-- 음식 알러지 -->
+            <div class="disease-group">
+                <label class="font-medium text-slate-700">음식 알러지</label>
+
+                <div class="flex gap-6 mt-2">
+                    <label><input type="radio" name="food_allergy" value="무"
+                        class="radio-none"
+                        {% if saved.food_allergy == "무" %} checked {% endif %}> 무</label>
+
+                    <label><input type="radio" name="food_allergy" value="유"
+                        class="radio-yes"
+                        {% if saved.food_allergy == "유" %} checked {% endif %}> 유</label>
+                </div>
+
+                <input name="food_allergy_desc"
+                       value="{{ saved.food_allergy_desc or '' }}"
+                       class="w-full border rounded-lg px-3 py-2 mt-3 desc-box
+                              {% if saved.food_allergy != '유' %} hidden {% endif %}"
+                       placeholder="알레르기 원인 음식 입력">
+            </div>
+
+            <!-- 약물 알러지 -->
+            <div class="disease-group">
+                <label class="font-medium text-slate-700">약물 알러지</label>
+
+                <div class="flex gap-6 mt-2">
+                    <label><input type="radio" name="drug_allergy" value="무"
+                        class="radio-none"
+                        {% if saved.drug_allergy == "무" %} checked {% endif %}> 무</label>
+
+                    <label><input type="radio" name="drug_allergy" value="유"
+                        class="radio-yes"
+                        {% if saved.drug_allergy == "유" %} checked {% endif %}> 유</label>
+                </div>
+
+                <input name="drug_allergy_desc"
+                       value="{{ saved.drug_allergy_desc or '' }}"
+                       class="w-full border rounded-lg px-3 py-2 mt-3 desc-box
+                              {% if saved.drug_allergy != '유' %} hidden {% endif %}"
+                       placeholder="약물 이름 입력">
+            </div>
+
+            <!-- 기타 알러지 -->
+            <div class="mt-2">
+                <label class="font-medium text-slate-700">기타</label>
+                <input type="text"
+                       name="allergy_other"
+                       value="{{ saved.allergy_other or '' }}"
+                       class="w-full border rounded-lg px-3 py-2 mt-3"
+                       placeholder="기타 알러지 입력">
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. 가족력 -->
+    <div class="disease-group" data-field="family_main">
+        <label class="font-semibold text-sky-700 text-lg">2. 직계가족 병력</label>
+
+        <div class="flex gap-6 mt-3">
+            <label>
+                <input type="radio" name="family_main" value="무"
+                       class="radio-none"
+                       {% if saved.family_main == "무" %} checked {% endif %}> 무
+            </label>
+
+            <label>
+                <input type="radio" name="family_main" value="유"
+                       class="radio-yes"
+                       {% if saved.family_main == "유" %} checked {% endif %}> 유
+            </label>
+        </div>
+
+        <!-- 가족력 상세 -->
+        <div class="mt-5 space-y-6 desc-box {% if saved.family_main != '유' %} hidden {% endif %}">
+
+            {% set fam_list = [
+                ('family_htn', 'family_htn_desc', '고혈압'),
+                ('family_dm', 'family_dm_desc', '당뇨'),
+                ('family_stroke', 'family_stroke_desc', '뇌졸중'),
+                ('family_cancer', 'family_cancer_desc', '암')
+            ] %}
+
+            {% for cb, desc, label in fam_list %}
+
+            <div>
+                <label class="font-medium text-slate-700">{{ label }}</label>
+
+                <div class="flex gap-4 mt-2">
+                    <label>
+                        <input type="checkbox" name="{{ cb }}" value="1"
+                               {% if saved[cb] == "1" %} checked {% endif %}>
+                        해당됨
+                    </label>
+                </div>
+
+                <input name="{{ desc }}"
+                       value="{{ saved[desc] if saved[cb] == '1' else '' }}"
+                       class="w-full border rounded-lg px-3 py-2 mt-3
+                              {% if saved[cb] != '1' %} hidden {% endif %}"
+                       placeholder="가족 구성원 입력 (예: 아버지, 어머니)">
+            </div>
+
+            {% endfor %}
+
+        </div>
+    </div>
+
+</div>
+
+
+<!-- JS 처리 -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    // 1) 알러지 / 가족력 → 유 선택 시 상세 표시
+    document.querySelectorAll(".disease-group").forEach(group => {
+        const yes = group.querySelector(".radio-yes");
+        const no  = group.querySelector(".radio-none");
+        const boxes = group.querySelectorAll(".desc-box");
+
+        if (yes) yes.addEventListener("change", () => boxes.forEach(b => b.classList.remove("hidden")));
+        if (no)  no.addEventListener("change", () => boxes.forEach(b => b.classList.add("hidden")));
+    });
+
+    // 2) 가족력 체크박스 선택 시 input 표시
+    const mapping = [
+        "family_htn", "family_htn_desc",
+        "family_dm", "family_dm_desc",
+        "family_stroke", "family_stroke_desc",
+        "family_cancer", "family_cancer_desc"
+    ];
+
+    for (let i = 0; i < mapping.length; i += 2) {
+        const cb = document.querySelector(`input[name='${mapping[i]}']`);
+        const inp = document.querySelector(`input[name='${mapping[i+1]}']`);
+
+        if (cb && inp) {
+            cb.addEventListener("change", () => {
+                if (cb.checked) inp.classList.remove("hidden");
+                else {
+                    inp.value = "";
+                    inp.classList.add("hidden");
+                }
+            });
+        }
+    }
+
+});
+</script>
+
+{% endblock %}
