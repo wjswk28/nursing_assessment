@@ -6,3 +6,4 @@ python-dotenv
 pandas
 openpyxl
 Werkzeug==2.3.7
+requests

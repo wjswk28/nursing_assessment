@@ -202,7 +202,8 @@ def form_step(token, step):
                 f"등록번호: {patient.patient_id}\n"
                 f"수술일: {patient.surgery_date}\n"
                 f"주치의: {patient.doctor_name}\n"
-                f"제출시간: {datetime.now(ZoneInfo('Asia/Seoul')).strftime('%Y-%m-%d %H:%M')}"
+                f"제출시간: {datetime.now(ZoneInfo('Asia/Seoul')).strftime('%Y-%m-%d %H:%M')}\n"
+                f"LINK: {https://nursing-assessment.onrender.com}"
             )
             send_nateon_message(msg)
 
