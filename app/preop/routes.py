@@ -203,7 +203,7 @@ def form_step(token, step):
                 f"수술일: {patient.surgery_date}\n"
                 f"주치의: {patient.doctor_name}\n"
                 f"제출시간: {datetime.now(ZoneInfo('Asia/Seoul')).strftime('%Y-%m-%d %H:%M')}\n"
-                f"LINK: {https://nursing-assessment.onrender.com}"
+                f"링크: https://nursing-assessment.onrender.com/admin/preop/view/{patient.id}"
             )
             send_nateon_message(msg)
 
