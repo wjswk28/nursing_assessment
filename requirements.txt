@@ -7,4 +7,4 @@ pandas
 openpyxl
 Werkzeug==2.3.7
 requests
-xlrd>=2.0.1
+xlrd==1.2.0
