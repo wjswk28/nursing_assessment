@@ -52,6 +52,29 @@ def preop_create():
     return render_template("admin_preop/create.html")"""
 
 # ===========================================
+# 🔧 XLS → XLSX 자동 변환 함수
+# ===========================================
+def convert_xls_to_xlsx(file_path):
+    import pandas as pd
+    from io import BytesIO
+    import os
+
+    # 1) xlrd로 .xls 읽기
+    df = pd.read_excel(file_path, engine="xlrd", header=None, dtype=str)
+
+    # 2) xlsx로 메모리 저장
+    output = BytesIO()
+    df.to_excel(output, index=False, header=False, engine="openpyxl")
+    output.seek(0)
+
+    # 3) 변환 파일 경로 생성
+    new_path = file_path + ".xlsx"
+    with open(new_path, "wb") as f:
+        f.write(output.read())
+
+    return new_path
+
+# ===========================================
 # 관리자용: 엑셀 기반 환자 등록 페이지
 # ===========================================
 @admin_preop_bp.route("/create_excel", methods=["GET"])
@@ -195,7 +218,13 @@ def find_from_excel():
 
     # 엑셀 읽기 (header 유무 상관없이 처리)
     try:
-        df = pd.read_excel(temp_path, header=None, dtype=str)
+        # 🔥 XLS → XLSX 자동 변환
+        if temp_path.lower().endswith(".xls"):
+            temp_path = convert_xls_to_xlsx(temp_path)
+
+        # 엑셀 읽기
+        df = pd.read_excel(temp_path, header=None, dtype=str, engine="openpyxl")
+
     except Exception as e:
         return jsonify({"status": "error", "message": f'엑셀 파일을 읽을 수 없습니다: {str(e)}'})
 
@@ -293,7 +322,12 @@ def find_from_excel_multi():
 
     # 엑셀 읽기
     try:
-        df = pd.read_excel(temp_path, header=None, dtype=str)
+        # 🔥 XLS → XLSX 자동 변환
+        if temp_path.lower().endswith(".xls"):
+            temp_path = convert_xls_to_xlsx(temp_path)
+
+        df = pd.read_excel(temp_path, header=None, dtype=str, engine="openpyxl")
+
     except Exception as e:
         return jsonify({"status": "error", "message": f"엑셀 파일을 읽을 수 없습니다: {str(e)}"})
 
