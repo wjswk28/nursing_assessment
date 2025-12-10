@@ -31,181 +31,136 @@
     <!-- 글래스 카드 -->
     <div class="glass-card max-w-4xl w-full rounded-2xl shadow-2xl border border-sky-200 p-10">
 
-        <!-- 등록 방식 선택 탭 -->
-        <div class="flex justify-center mb-8">
-            <button id="tabExcel" 
-                    class="px-4 py-2 text-white font-semibold bg-sky-600 rounded-l-xl shadow">
-                엑셀 등록
-            </button>
-            <button id="tabManual" 
-                    class="px-4 py-2 text-slate-600 font-semibold bg-slate-200 rounded-r-xl shadow">
-                수동 등록
-            </button>
-        </div>
-
-
         <!-- 📌 STEP 1: 엑셀 업로드 -->
-        <div id="excelSection">
-            <div class="grid grid-cols-1 gap-8 mb-10">
-                
-                {% set label_class = "block text-sm font-semibold text-slate-600 mb-1" %}
-                {% set input_box = "flex items-center gap-2 border border-sky-200 rounded-xl px-4 py-3 bg-white" %}
-                {% set input_class = "w-full outline-none text-slate-700 placeholder-slate-400" %}
+        <div class="grid grid-cols-1 gap-8 mb-10">
+            
+            {% set label_class = "block text-sm font-semibold text-slate-600 mb-1" %}
+            {% set input_box = "flex items-center gap-2 border border-sky-200 rounded-xl px-4 py-3 bg-white" %}
+            {% set input_class = "w-full outline-none text-slate-700 placeholder-slate-400" %}
 
-                <div>
-                    <label class="{{ label_class }}">엑셀 파일 업로드</label>
-                    <div id="dropZone"
-                        class="border-2 border-dashed border-sky-300 rounded-xl p-10 text-center cursor-pointer transition bg-white">
-                        <p class="text-sky-700 font-semibold text-lg">여기에 엑셀 파일을 끌어놓으세요</p>
-                        <p class="text-slate-500 text-sm mt-1">등록번호와 일치하는 환자 정보를 자동으로 불러옵니다</p>
-                    </div>
-                    <input type="file" id="excelFileInput" class="hidden" accept=".xlsx,.xls">
+            <div>
+                <label class="{{ label_class }}">등록번호</label>
+                <div class="{{ input_box }}">
+                    <i data-lucide="hash" class="w-5 h-5 text-sky-600"></i>
+                    <input id="excel_patient_id" type="text" class="{{ input_class }}" placeholder="예: 87654">
                 </div>
+            </div>
 
-                <!-- 📌 STEP 2: 엑셀에서 가져온 환자 목록 표시 -->
-                <div id="excelPatientList" class="mt-8 space-y-3 hidden">
-                    <h2 class="text-xl font-bold text-sky-800 mb-3">엑셀에서 불러온 환자 목록</h2>
-                    <div id="patientItems" class="space-y-2"></div>
+            <div>
+                <label class="{{ label_class }}">엑셀 파일 업로드</label>
+                <div id="dropZone"
+                    class="border-2 border-dashed border-sky-300 rounded-xl p-10 text-center cursor-pointer transition bg-white">
+                    <p class="text-sky-700 font-semibold text-lg">여기에 엑셀 파일을 끌어놓으세요</p>
+                    <p class="text-slate-500 text-sm mt-1">등록번호와 일치하는 환자 정보를 자동으로 불러옵니다</p>
                 </div>
-
+                <input type="file" id="excelFileInput" class="hidden" accept=".xlsx,.xls">
             </div>
         </div>
 
         <!-- 📌 STEP 2: 환자 정보 입력 (기존 create.html) -->
-        <div id="manualSection" class="hidden">
-            <form id="patientForm" method="POST" action="{{ url_for('admin_preop.preop_create_excel_submit') }}" class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <input type="hidden" id="jsonPatients" name="jsonPatients">
+        <form id="patientForm" method="POST" action="{{ url_for('admin_preop.preop_create_excel_submit') }}" class="grid grid-cols-1 md:grid-cols-2 gap-8">
 
-                <!-- 수술 날짜 -->
-                <div>
-                    <label class="{{ label_class }}">수술 날짜</label>
-                    <div class="{{ input_box }}">
-                        <i data-lucide="calendar" class="w-5 h-5 text-sky-600"></i>
-                        <input id="surgery_date" name="surgery_date" type="date" class="{{ input_class }}">
-                    </div>
+            <!-- 수술 날짜 -->
+            <div>
+                <label class="{{ label_class }}">수술 날짜</label>
+                <div class="{{ input_box }}">
+                    <i data-lucide="calendar" class="w-5 h-5 text-sky-600"></i>
+                    <input id="surgery_date" name="surgery_date" type="date" class="{{ input_class }}" required>
                 </div>
+            </div>
 
-                <!-- 등록번호 -->
-                <div>
-                    <label class="{{ label_class }}">등록번호</label>
-                    <div class="{{ input_box }}">
-                        <i data-lucide="hash" class="w-5 h-5 text-sky-600"></i>
-                        <input id="patient_id" name="patient_id" type="text" class="{{ input_class }}">
-                    </div>
+            <!-- 등록번호 -->
+            <div>
+                <label class="{{ label_class }}">등록번호</label>
+                <div class="{{ input_box }}">
+                    <i data-lucide="hash" class="w-5 h-5 text-sky-600"></i>
+                    <input id="patient_id" name="patient_id" type="text" class="{{ input_class }}" required>
                 </div>
+            </div>
 
-                <!-- 이름 -->
-                <div>
-                    <label class="{{ label_class }}">이름</label>
-                    <div class="{{ input_box }}">
-                        <i data-lucide="user" class="w-5 h-5 text-sky-600"></i>
-                        <input id="name" name="name" type="text" class="{{ input_class }}">
-                    </div>
+            <!-- 이름 -->
+            <div>
+                <label class="{{ label_class }}">이름</label>
+                <div class="{{ input_box }}">
+                    <i data-lucide="user" class="w-5 h-5 text-sky-600"></i>
+                    <input id="name" name="name" type="text" class="{{ input_class }}" required>
                 </div>
+            </div>
 
-                <!-- 성별 -->
-                <div>
-                    <label class="{{ label_class }}">성별</label>
-                    <div class="grid grid-cols-2 gap-3">
-                        <button type="button" class="gender-btn border border-sky-200 rounded-xl py-3 text-sky-700 font-semibold bg-white"
-                            onclick="selectGender('M', this)">남자</button>
+            <!-- 성별 -->
+            <div>
+                <label class="{{ label_class }}">성별</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <button type="button" class="gender-btn border border-sky-200 rounded-xl py-3 text-sky-700 font-semibold bg-white"
+                        onclick="selectGender('M', this)">남자</button>
 
-                        <button type="button" class="gender-btn border border-sky-200 rounded-xl py-3 text-sky-700 font-semibold bg-white"
-                            onclick="selectGender('F', this)">여자</button>
-                    </div>
-                    <input id="gender" name="gender" type="hidden">
+                    <button type="button" class="gender-btn border border-sky-200 rounded-xl py-3 text-sky-700 font-semibold bg-white"
+                        onclick="selectGender('F', this)">여자</button>
                 </div>
+                <input id="gender" name="gender" type="hidden">
+            </div>
 
-                <!-- 나이 -->
-                <div>
-                    <label class="{{ label_class }}">나이</label>
-                    <div class="{{ input_box }}">
-                        <i data-lucide="user-check" class="w-5 h-5 text-sky-600"></i>
-                        <input id="age" name="age" type="number" class="{{ input_class }}" placeholder="예: 42">
-                    </div>
+            <!-- 나이 -->
+            <div>
+                <label class="{{ label_class }}">나이</label>
+                <div class="{{ input_box }}">
+                    <i data-lucide="user-check" class="w-5 h-5 text-sky-600"></i>
+                    <input id="age" name="age" type="number" class="{{ input_class }}" placeholder="예: 42" required>
                 </div>
+            </div>
 
 
-                <!-- 수술명 -->
-                <div>
-                    <label class="{{ label_class }}">수술명</label>
-                    <div class="{{ input_box }}">
-                        <i data-lucide="activity" class="w-5 h-5 text-sky-600"></i>
-                        <input id="surgery_name" name="surgery_name" type="text" class="{{ input_class }}">
-                    </div>
+            <!-- 수술명 -->
+            <div>
+                <label class="{{ label_class }}">수술명</label>
+                <div class="{{ input_box }}">
+                    <i data-lucide="activity" class="w-5 h-5 text-sky-600"></i>
+                    <input id="surgery_name" name="surgery_name" type="text" class="{{ input_class }}">
                 </div>
+            </div>
 
-                <!-- 주치의 -->
-                <div>
-                    <label class="{{ label_class }}">주치의</label>
-                    <div class="{{ input_box }}">
-                        <i data-lucide="stethoscope" class="w-5 h-5 text-sky-600"></i>
-                        <select id="doctor_name" name="doctor_name" class="w-full outline-none bg-white text-slate-700">
-                            <option value="최윤진">최윤진</option>
-                            <option value="고민석">고민석</option>
-                            <option value="임경한">임경한</option>
-                            <option value="최윤석">최윤석</option>
-                            <option value="박상준">박상준</option>
-                            <option value="엄광식">엄광식</option>
-                        </select>
-                    </div>
+            <!-- 주치의 -->
+            <div>
+                <label class="{{ label_class }}">주치의</label>
+                <div class="{{ input_box }}">
+                    <i data-lucide="stethoscope" class="w-5 h-5 text-sky-600"></i>
+                    <select id="doctor_name" name="doctor_name" class="w-full outline-none bg-white text-slate-700">
+                        <option value="최윤진">최윤진</option>
+                        <option value="고민석">고민석</option>
+                        <option value="임경한">임경한</option>
+                        <option value="최윤석">최윤석</option>
+                        <option value="박상준">박상준</option>
+                        <option value="엄광식">엄광식</option>
+                    </select>
                 </div>
+            </div>
 
-                <!-- 전화번호 -->
-                <div>
-                    <label class="{{ label_class }}">전화번호</label>
-                    <div class="{{ input_box }}">
-                        <i data-lucide="phone" class="w-5 h-5 text-sky-600"></i>
-                        <input id="phone" name="phone" type="text" class="{{ input_class }}">
-                    </div>
+            <!-- 전화번호 -->
+            <div>
+                <label class="{{ label_class }}">전화번호</label>
+                <div class="{{ input_box }}">
+                    <i data-lucide="phone" class="w-5 h-5 text-sky-600"></i>
+                    <input id="phone" name="phone" type="text" class="{{ input_class }}">
                 </div>
-            </form>
-        </div>
-        <!-- 하단 버튼 -->
-        <div class="col-span-1 md:col-span-2 flex justify-between items-center mt-4">
-            <a href="{{ url_for('admin_preop.preop_list') }}"
-                class="px-6 py-3 rounded-xl bg-slate-200 text-slate-700 font-semibold hover:bg-slate-300 transition shadow">
-                목록으로 돌아가기
-            </a>
+            </div>
 
-            <button id="submitBtn" type="button"
-                class="px-8 py-3 rounded-xl bg-gradient-to-r from-sky-600 to-sky-700 text-white font-bold hover:from-sky-700 hover:to-sky-800 transition shadow-lg">
-                환자 등록하기
-            </button>
-        </div>
+            <!-- 하단 버튼 -->
+            <div class="col-span-1 md:col-span-2 flex justify-between items-center mt-4">
+                <a href="{{ url_for('admin_preop.preop_list') }}"
+                    class="px-6 py-3 rounded-xl bg-slate-200 text-slate-700 font-semibold hover:bg-slate-300 transition shadow">
+                    목록으로 돌아가기
+                </a>
+
+                <button type="submit"
+                    class="px-8 py-3 rounded-xl bg-gradient-to-r from-sky-600 to-sky-700 text-white font-bold hover:from-sky-700 hover:to-sky-800 transition shadow-lg">
+                    환자 등록하기
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
 <script>
-
-const tabExcel = document.getElementById("tabExcel");
-const tabManual = document.getElementById("tabManual");
-const excelSection = document.getElementById("excelSection");
-const manualSection = document.getElementById("manualSection");
-
-// 🔵 엑셀 모드 클릭
-tabExcel.onclick = () => {
-    tabExcel.classList.add("bg-sky-600", "text-white");
-    tabManual.classList.remove("bg-sky-600", "text-white");
-    tabManual.classList.add("bg-slate-200", "text-slate-600");
-
-    excelSection.classList.remove("hidden");
-    manualSection.classList.add("hidden");
-};
-
-// ⚪ 수동 모드 클릭
-tabManual.onclick = () => {
-    tabManual.classList.add("bg-sky-600", "text-white");
-    tabExcel.classList.remove("bg-sky-600", "text-white");
-    tabExcel.classList.add("bg-slate-200", "text-slate-600");
-
-    manualSection.classList.remove("hidden");
-    excelSection.classList.add("hidden");
-
-    // 수동 등록 모드에서는 엑셀 데이터 초기화
-    window.uploadedPatients = [];
-};
-
 /* ===============================
    성별 선택
 ================================*/
@@ -238,85 +193,38 @@ excelInput.addEventListener("change", () => {
    엑셀 전송
 ================================*/
 function sendExcel(file) {
+    const pid = document.getElementById("excel_patient_id").value.trim();
+    if (!pid) return alert("먼저 등록번호를 입력하세요!");
 
     const formData = new FormData();
     formData.append("excel_file", file);
+    formData.append("patient_id", pid);
 
-    fetch("/admin/preop/find_from_excel_multi", {   // 🔥 새로운 API 경로
+    fetch("/admin/preop/find_from_excel", {
         method: "POST",
         body: formData
     })
     .then(r => r.json())
     .then(data => {
+        if (data.status !== "success") return alert(data.message);
 
-        if (data.status !== "success") {
-            alert(data.message);
-            return;
-        }
+        const p = data.patient;
 
-        const listDiv = document.getElementById("excelPatientList");
-        const itemsDiv = document.getElementById("patientItems");
+        document.getElementById("surgery_date").value = p.surgery_date;
+        document.getElementById("patient_id").value = p.patient_id;
+        document.getElementById("name").value = p.name;
+        document.getElementById("gender").value = p.gender;
 
-        listDiv.classList.remove("hidden");
-        itemsDiv.innerHTML = "";   // 초기화
+        if (p.gender === "M") selectGender("M", document.querySelectorAll(".gender-btn")[0]);
+        if (p.gender === "F") selectGender("F", document.querySelectorAll(".gender-btn")[1]);
 
-        data.patients.forEach((p, idx) => {
+        document.getElementById("age").value = p.age;
 
-            const row = document.createElement("div");
-            row.className = "flex items-center justify-between bg-white border border-sky-200 rounded-xl px-4 py-3 shadow";
-
-            row.innerHTML = `
-                <div class="flex flex-wrap gap-4 text-sm text-slate-700">
-                    <span><strong>수술날짜:</strong> ${p.surgery_date}</span>
-                    <span><strong>등록번호:</strong> ${p.patient_id}</span>
-                    <span><strong>이름:</strong> ${p.name}</span>
-                    <span><strong>성별:</strong> ${p.gender}</span>
-                    <span><strong>나이:</strong> ${p.age}</span>
-                    <span><strong>수술명:</strong> ${p.surgery_name}</span>
-                    <span><strong>주치의:</strong> ${p.doctor_name}</span>
-                </div>
-
-                <button class="text-red-500 font-bold ml-4"
-                        onclick="removePatient(${idx})">X</button>
-            `;
-
-            itemsDiv.appendChild(row);
-        });
-
-        // JS 메모리 배열에 저장
-        window.uploadedPatients = data.patients;
+        document.getElementById("surgery_name").value = p.surgery_name;
+        document.getElementById("doctor_name").value = p.doctor_name;
+        document.getElementById("phone").value = p.phone;
     });
 }
-function removePatient(index) {
-    window.uploadedPatients.splice(index, 1);
-    const itemsDiv = document.getElementById("patientItems");
-    itemsDiv.children[index].remove();
-}
-// ===============================
-//   폼 제출 시 모드에 따라 동작 분리
-// ===============================
-const submitBtn = document.getElementById("submitBtn");
-
-submitBtn.onclick = function () {
-
-    // 🔵 엑셀 등록 모드
-    if (!excelSection.classList.contains("hidden")) {
-
-        if (window.uploadedPatients && window.uploadedPatients.length > 0) {
-            document.getElementById("jsonPatients").value =
-                JSON.stringify(window.uploadedPatients);
-            document.getElementById("patientForm").submit();
-        } else {
-            alert("엑셀에서 불러온 환자가 없습니다.");
-        }
-        return;
-    }
-
-    // ⚪ 수동 등록 모드
-    document.getElementById("jsonPatients").value = ""; // 엑셀 데이터 제거
-    document.getElementById("patientForm").submit();
-};
-
 </script>
 
 {% endblock %}
