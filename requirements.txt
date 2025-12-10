@@ -3,8 +3,8 @@ Flask-SQLAlchemy
 Flask-Login
 gunicorn
 python-dotenv
-pandas
-openpyxl
 Werkzeug==2.3.7
 requests
+pandas==1.5.3
+openpyxl
 xlrd==1.2.0
