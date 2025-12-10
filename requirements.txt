@@ -1,3 +1,6 @@
+pandas==2.0.3
+openpyxl==3.1.2
+xlrd==1.2.0
 Flask
 Flask-SQLAlchemy
 Flask-Login
@@ -5,7 +8,4 @@ gunicorn
 python-dotenv
 Werkzeug==2.3.7
 requests
-pandas==2.2.2
-openpyxl
-xlrd==1.2.0
 # refresh build cache
