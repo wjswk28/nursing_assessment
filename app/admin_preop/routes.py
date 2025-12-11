@@ -182,49 +182,61 @@ def find_from_excel():
     from werkzeug.utils import secure_filename
     import os
 
+    # -------------------------------
+    # 🔥 normalize_pid 꼭 위에 있어야 함!
+    # -------------------------------
+    def normalize_pid(v):
+        v = str(v).strip()
+        v = re.sub(r"\D", "", v)   # 숫자만 남기기
+        return v                   # 앞자리 0 유지 X (핵심)
+
+    # -------------------------------
+    # 입력값 정리
+    # -------------------------------
     excel_file = request.files.get("excel_file")
     patient_id = request.form.get("patient_id", "").strip()
-    norm_pid = normalize_pid(patient_id)
 
     if not excel_file or not patient_id:
         return jsonify({"status": "error", "message": "파일 또는 등록번호가 없습니다."})
 
+    # 입력된 등록번호 숫자만 추출한 형태
+    norm_pid = normalize_pid(patient_id)
+
+    # -------------------------------
     # 파일 저장
+    # -------------------------------
     filename = secure_filename(excel_file.filename)
     temp_path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
     excel_file.save(temp_path)
 
-    # 엑셀 읽기 (header 유무 상관없이 처리)
+    # -------------------------------
+    # 엑셀 읽기
+    # -------------------------------
     try:
         df = pd.read_excel(temp_path, header=None, dtype=str)
     except Exception as e:
         return jsonify({"status": "error", "message": f'엑셀 파일을 읽을 수 없습니다: {str(e)}'})
 
-    # 🔥 모든 셀 앞뒤 공백 제거
+    # 모든 셀 strip
     df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
 
-    # ============================================================
-    # 1) 등록번호(9자리 숫자)만 들어있는 열 자동 탐색
-    # ============================================================
+    # -------------------------------
+    # 🔍 등록번호가 있는 열 자동 탐색
+    # -------------------------------
     pid_col = None
-    def normalize_pid(v):
-        v = str(v).strip()
-        v = re.sub(r"\D", "", v)   # 숫자만 남기기
-        return v                   # ✔ 앞자리 0 채우지 않음 (핵심 수정)
 
-    # 엑셀 탐색 부분에서 패턴 탐색 대신 이렇게
     for col in df.columns:
+        # 숫자만 뽑은 값이 norm_pid와 같은지 검사
         if df[col].apply(lambda x: normalize_pid(x) == norm_pid).any():
             pid_col = col
             break
 
     if pid_col is None:
-        return jsonify({"status": "error", "message": "등록번호(9자리)를 포함한 열을 찾을 수 없습니다."})
+        return jsonify({"status": "error", "message": "등록번호가 포함된 열을 찾을 수 없습니다."})
 
-    # ============================================================
-    # 2) 등록번호로 행 검색
-    # ============================================================
-    df[pid_col] = df[pid_col].astype(str).str.strip()
+    # -------------------------------
+    # 🔍 해당 등록번호가 있는 행 찾기
+    # -------------------------------
     df[pid_col] = df[pid_col].apply(normalize_pid)
     row = df[df[pid_col] == norm_pid]
 
@@ -234,31 +246,31 @@ def find_from_excel():
     r = row.iloc[0]
     print("🔍 READ ROW:", r.to_dict())
 
+    # -------------------------------
     # 안전 문자열 처리
+    # -------------------------------
     def safe(v):
         return "" if pd.isna(v) else str(v).strip()
 
-    # 🔥 날짜만 뽑아내는 함수
     def extract_date(v):
         v = safe(v)
         m = re.search(r"\d{4}-\d{2}-\d{2}", v)
         return m.group(0) if m else ""
-    
+
     def extract_age(v):
         v = safe(v)
         m = re.search(r"\d+", v)
         return m.group(0) if m else ""
 
-    # index는 행의 실제 길이에 따라 보정
     def get_col(idx):
         try:
             return safe(r[idx])
         except:
             return ""
 
-    # ============================================================
-    # 3) 나머지 값 매핑 (너가 제공한 엑셀 구조 기준)
-    # ============================================================
+    # -------------------------------
+    # 🔄 최종 결과 매핑
+    # -------------------------------
     patient_data = {
         "surgery_date": extract_date(get_col(5)),
         "patient_id": safe(patient_id),
