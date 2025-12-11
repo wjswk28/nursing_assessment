@@ -162,6 +162,26 @@
 
 <script>
 /* ===============================
+   등록번호 정규화: 숫자만 + 앞 0 제거
+   예) "000065569" -> "65569", 65569 -> "65569"
+================================*/
+function normalizeRegNo(value) {
+    if (value === null || value === undefined) return "";
+
+    // 1) 문자열로 만들기
+    let s = String(value).trim();
+
+    // 2) 숫자만 남기기 (혹시 문자 섞여도 방어)
+    s = s.replace(/\D/g, "");
+
+    // 3) 앞의 0 제거
+    s = s.replace(/^0+/, "");
+
+    // 4) 다 지워졌으면 빈 문자열 반환
+    return s;
+}
+
+/* ===============================
    성별 선택
 ================================*/
 function selectGender(value, element) {
@@ -178,11 +198,13 @@ const dropZone = document.getElementById("dropZone");
 const excelInput = document.getElementById("excelFileInput");
 
 dropZone.addEventListener("click", () => excelInput.click());
-dropZone.addEventListener("dragover", e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add("dropzone-hover"); });
+dropZone.addEventListener("dragover", e => { 
+    e.preventDefault(); 
+    dropZone.classList.add("dropzone-hover"); 
+});
 dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dropzone-hover"));
 dropZone.addEventListener("drop", e => {
     e.preventDefault();
-    e.stopPropagation();
     dropZone.classList.remove("dropzone-hover");
     if (e.dataTransfer.files[0]) sendExcel(e.dataTransfer.files[0]);
 });
@@ -194,12 +216,16 @@ excelInput.addEventListener("change", () => {
    엑셀 전송
 ================================*/
 function sendExcel(file) {
-    const pid = document.getElementById("excel_patient_id").value.trim();
-    if (!pid) return alert("먼저 등록번호를 입력하세요!");
+    const rawPid = document.getElementById("excel_patient_id").value.trim();
+    if (!rawPid) return alert("먼저 등록번호를 입력하세요!");
+
+    // 🔵 등록번호를 정규화해서 사용 (000065569, 65569 둘 다 OK)
+    const pid = normalizeRegNo(rawPid);
+    if (!pid) return alert("등록번호는 숫자만 입력해주세요.");
 
     const formData = new FormData();
     formData.append("excel_file", file);
-    formData.append("patient_id", pid);
+    formData.append("patient_id", pid);   // 🔵 정규화된 값 전송
 
     fetch("/admin/preop/find_from_excel", {
         method: "POST",
@@ -212,7 +238,11 @@ function sendExcel(file) {
         const p = data.patient;
 
         document.getElementById("surgery_date").value = p.surgery_date;
-        document.getElementById("patient_id").value = p.patient_id;
+
+        // 🔵 9자리로 0 패딩해서 보여주고 싶으면 이렇게
+        const digits = normalizeRegNo(p.patient_id);
+        document.getElementById("patient_id").value = digits.padStart(9, "0");
+
         document.getElementById("name").value = p.name;
         document.getElementById("gender").value = p.gender;
 
@@ -220,12 +250,12 @@ function sendExcel(file) {
         if (p.gender === "F") selectGender("F", document.querySelectorAll(".gender-btn")[1]);
 
         document.getElementById("age").value = p.age;
-
         document.getElementById("surgery_name").value = p.surgery_name;
         document.getElementById("doctor_name").value = p.doctor_name;
         document.getElementById("phone").value = p.phone;
     });
 }
 </script>
+
 
 {% endblock %}
