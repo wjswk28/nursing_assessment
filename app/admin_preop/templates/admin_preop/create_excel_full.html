@@ -178,10 +178,11 @@ const dropZone = document.getElementById("dropZone");
 const excelInput = document.getElementById("excelFileInput");
 
 dropZone.addEventListener("click", () => excelInput.click());
-dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("dropzone-hover"); });
+dropZone.addEventListener("dragover", e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add("dropzone-hover"); });
 dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dropzone-hover"));
 dropZone.addEventListener("drop", e => {
     e.preventDefault();
+    e.stopPropagation();
     dropZone.classList.remove("dropzone-hover");
     if (e.dataTransfer.files[0]) sendExcel(e.dataTransfer.files[0]);
 });
