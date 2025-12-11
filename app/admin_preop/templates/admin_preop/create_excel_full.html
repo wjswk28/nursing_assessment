@@ -18,6 +18,36 @@
       color: white !important;
       border-color: #0284c7 !important;
   }
+    /* 🔵 상단 모드 탭 (크게 버전) */
+  .mode-tabs-wrap {
+      display: inline-flex;
+      padding: 6px;                          /* 전체 테두리 두께 */
+      border-radius: 9999px;
+      background: rgba(125, 211, 252, 0.25); /* 바깥 연한 파랑 */
+      border: 1px solid rgba(56, 189, 248, 0.9);
+      box-shadow: 0 10px 28px rgba(56, 189, 248, 0.35);
+  }
+  .mode-tab {
+      border-radius: 9999px;
+      padding: 0.7rem 2.4rem;               /* ⬅︎ 세로/가로 패딩 키움 */
+      font-size: 1rem;                      /* 글자 조금 키움 */
+      font-weight: 600;
+      color: #0369a1;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      transition: all 0.18s ease-out;
+      white-space: nowrap;
+      min-width: 150px;                     /* 최소 가로 길이 확보 */
+      text-align: center;
+  }
+  .mode-tab.active {
+      background: linear-gradient(135deg,#0ea5e9,#0369a1);
+      color: #ffffff;
+      box-shadow: 0 8px 22px rgba(56, 189, 248, 0.7);
+      transform: translateY(-1px);
+  }
+
 </style>
 
 <div class="min-h-screen flex flex-col items-center justify-start px-6 py-10 bg-gradient-to-br from-sky-50 to-sky-100">
@@ -27,12 +57,23 @@
         <img src="/static/images/checklist_logo.png" class="h-12" alt="logo">
         <span class="text-3xl font-bold text-sky-800">Patient Register (Excel Auto)</span>
     </div>
+    <!-- 📌 상단 모드 탭 -->
+    <div class="flex justify-center mb-6">
+        <div class="mode-tabs-wrap">
+            <button id="modeExcel" type="button" class="mode-tab active">
+                엑셀 환자등록
+            </button>
+            <button id="modeManual" type="button" class="mode-tab">
+                직접 환자등록
+            </button>
+        </div>
+    </div>
 
     <!-- 글래스 카드 -->
     <div class="glass-card max-w-4xl w-full rounded-2xl shadow-2xl border border-sky-200 p-10">
 
         <!-- 📌 STEP 1: 엑셀 업로드 -->
-        <div class="grid grid-cols-1 gap-8 mb-10">
+        <div id="excelSection" class="grid grid-cols-1 gap-8 mb-10">
             
             {% set label_class = "block text-sm font-semibold text-slate-600 mb-1" %}
             {% set input_box = "flex items-center gap-2 border border-sky-200 rounded-xl px-4 py-3 bg-white" %}
@@ -162,6 +203,35 @@
 
 <script>
 /* ===============================
+   🔵 모드 전환 (excel / manual)
+================================*/
+let currentMode = "excel";  // 기본은 엑셀 모드
+
+const excelSection = document.getElementById("excelSection");
+const btnModeExcel = document.getElementById("modeExcel");
+const btnModeManual = document.getElementById("modeManual");
+
+function setMode(mode) {
+    currentMode = mode;
+
+    if (mode === "excel") {
+        btnModeExcel.classList.add("active");
+        btnModeManual.classList.remove("active");
+        excelSection.classList.remove("hidden");
+    } else {
+        btnModeManual.classList.add("active");
+        btnModeExcel.classList.remove("active");
+        excelSection.classList.add("hidden");
+
+        // 엑셀 입력 필드 초기화 (선택 사항)
+        document.getElementById("excel_patient_id").value = "";
+    }
+}
+
+btnModeExcel.addEventListener("click", () => setMode("excel"));
+btnModeManual.addEventListener("click", () => setMode("manual"));
+
+/* ===============================
    등록번호 정규화: 숫자만 + 앞 0 제거
    예) "000065569" -> "65569", 65569 -> "65569"
 ================================*/
@@ -216,6 +286,9 @@ excelInput.addEventListener("change", () => {
    엑셀 전송
 ================================*/
 function sendExcel(file) {
+
+    if (currentMode !== "excel") return;
+
     const rawPid = document.getElementById("excel_patient_id").value.trim();
     if (!rawPid) return alert("먼저 등록번호를 입력하세요!");
 
