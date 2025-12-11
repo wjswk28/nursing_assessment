@@ -182,98 +182,106 @@ def find_from_excel():
     from werkzeug.utils import secure_filename
     import os
 
-    # -------------------------------
-    # 🔥 normalize_pid 꼭 위에 있어야 함!
-    # -------------------------------
-    def normalize_pid(v):
-        v = str(v).strip()
-        v = re.sub(r"\D", "", v)   # 숫자만 남기기
-        return v                   # 앞자리 0 유지 X (핵심)
-
-    # -------------------------------
-    # 입력값 정리
-    # -------------------------------
     excel_file = request.files.get("excel_file")
-    patient_id = request.form.get("patient_id", "").strip()
+    input_pid = request.form.get("patient_id", "").strip()
 
-    if not excel_file or not patient_id:
+    if not excel_file or not input_pid:
         return jsonify({"status": "error", "message": "파일 또는 등록번호가 없습니다."})
 
-    # 입력된 등록번호 숫자만 추출한 형태
-    norm_pid = normalize_pid(patient_id)
+    # ==============================
+    # 🔹 등록번호 정규화 함수
+    #    - 숫자만 남기고
+    #    - 앞의 0 제거
+    #    - 모두 0 또는 비면 "0"
+    # ==============================
+    def normalize_pid(v):
+        if v is None:
+            return ""
+        s = str(v).strip()
+        s = re.sub(r"\D", "", s)   # 숫자만 남기기
+        s = s.lstrip("0")          # 앞의 0 제거
+        return s or "0"
 
-    # -------------------------------
-    # 파일 저장
-    # -------------------------------
+    # 화면에 보여줄 때 9자리 0패딩용
+    def format_pid9(v):
+        return normalize_pid(v).zfill(9)
+
+    # ------------------------------
+    # 1) 파일 임시 저장
+    # ------------------------------
     filename = secure_filename(excel_file.filename)
     temp_path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
     excel_file.save(temp_path)
 
-    # -------------------------------
-    # 엑셀 읽기
-    # -------------------------------
+    # ------------------------------
+    # 2) 엑셀 읽기
+    # ------------------------------
     try:
+        # 전부 문자열로 읽기
         df = pd.read_excel(temp_path, header=None, dtype=str)
     except Exception as e:
-        return jsonify({"status": "error", "message": f'엑셀 파일을 읽을 수 없습니다: {str(e)}'})
+        return jsonify({"status": "error", "message": f"엑셀 파일을 읽을 수 없습니다: {str(e)}"})
 
-    # 모든 셀 strip
+    # 🔥 모든 셀 앞뒤 공백 제거
     df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
 
-    # -------------------------------
-    # 🔍 등록번호가 있는 열 자동 탐색
-    # -------------------------------
+    # ------------------------------
+    # 3) 등록번호 열 찾기 (정규화해서 비교)
+    # ------------------------------
+    search_key = normalize_pid(input_pid)
     pid_col = None
 
     for col in df.columns:
-        # 숫자만 뽑은 값이 norm_pid와 같은지 검사
-        if df[col].apply(lambda x: normalize_pid(x) == norm_pid).any():
+        if df[col].apply(lambda x: normalize_pid(x) == search_key).any():
             pid_col = col
             break
 
     if pid_col is None:
-        return jsonify({"status": "error", "message": "등록번호가 포함된 열을 찾을 수 없습니다."})
+        return jsonify({"status": "error", "message": "등록번호를 포함한 열을 찾을 수 없습니다."})
 
-    # -------------------------------
-    # 🔍 해당 등록번호가 있는 행 찾기
-    # -------------------------------
-    df[pid_col] = df[pid_col].apply(normalize_pid)
-    row = df[df[pid_col] == norm_pid]
+    # ------------------------------
+    # 4) 등록번호로 행 찾기 (정규화 기준)
+    # ------------------------------
+    df["_norm_pid"] = df[pid_col].apply(normalize_pid)
+    row = df[df["_norm_pid"] == search_key]
 
     if row.empty:
-        return jsonify({"status": "error", "message": f"[{patient_id}] 등록번호를 찾을 수 없습니다."})
+        return jsonify({"status": "error", "message": f"[{input_pid}] 등록번호를 찾을 수 없습니다."})
 
     r = row.iloc[0]
     print("🔍 READ ROW:", r.to_dict())
 
-    # -------------------------------
     # 안전 문자열 처리
-    # -------------------------------
     def safe(v):
         return "" if pd.isna(v) else str(v).strip()
 
+    # 🔥 날짜만 뽑아내는 함수 (YYYY-MM-DD)
     def extract_date(v):
         v = safe(v)
         m = re.search(r"\d{4}-\d{2}-\d{2}", v)
         return m.group(0) if m else ""
-
+    
+    # 🔥 나이만 숫자로 뽑기
     def extract_age(v):
         v = safe(v)
         m = re.search(r"\d+", v)
         return m.group(0) if m else ""
 
+    # index는 행의 실제 길이에 따라 보정
     def get_col(idx):
         try:
             return safe(r[idx])
-        except:
+        except Exception:
             return ""
 
-    # -------------------------------
-    # 🔄 최종 결과 매핑
-    # -------------------------------
+    # ------------------------------
+    # 5) 나머지 값 매핑 (엑셀 구조 그대로)
+    #    ※ 인덱스는 기존 코드 유지
+    # ------------------------------
     patient_data = {
         "surgery_date": extract_date(get_col(5)),
-        "patient_id": safe(patient_id),
+        # 🔵 엑셀에 있는 원본 값에서 9자리로 포맷
+        "patient_id": format_pid9(r[pid_col]),
         "name": get_col(8),
         "gender": get_col(9),
         "age": extract_age(get_col(10)),
@@ -283,6 +291,7 @@ def find_from_excel():
     }
 
     return jsonify({"status": "success", "patient": patient_data})
+
 
 @admin_preop_bp.route("/create_excel_submit", methods=["POST"])
 @login_required
