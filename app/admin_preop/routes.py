@@ -184,6 +184,7 @@ def find_from_excel():
 
     excel_file = request.files.get("excel_file")
     patient_id = request.form.get("patient_id", "").strip()
+    norm_pid = normalize_pid(patient_id)
 
     if not excel_file or not patient_id:
         return jsonify({"status": "error", "message": "파일 또는 등록번호가 없습니다."})
@@ -209,11 +210,11 @@ def find_from_excel():
     def normalize_pid(v):
         v = str(v).strip()
         v = re.sub(r"\D", "", v)   # 숫자만 남기기
-        return v.zfill(9)          # 9자리로 앞 0 채움
+        return v                   # ✔ 앞자리 0 채우지 않음 (핵심 수정)
 
     # 엑셀 탐색 부분에서 패턴 탐색 대신 이렇게
     for col in df.columns:
-        if df[col].apply(lambda x: normalize_pid(x) == normalize_pid(patient_id)).any():
+        if df[col].apply(lambda x: normalize_pid(x) == norm_pid).any():
             pid_col = col
             break
 
@@ -224,7 +225,8 @@ def find_from_excel():
     # 2) 등록번호로 행 검색
     # ============================================================
     df[pid_col] = df[pid_col].astype(str).str.strip()
-    row = df[df[pid_col] == patient_id]
+    df[pid_col] = df[pid_col].apply(normalize_pid)
+    row = df[df[pid_col] == norm_pid]
 
     if row.empty:
         return jsonify({"status": "error", "message": f"[{patient_id}] 등록번호를 찾을 수 없습니다."})
