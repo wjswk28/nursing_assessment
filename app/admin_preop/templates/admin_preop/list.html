@@ -37,20 +37,26 @@
         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-3">
 
             <!-- 검색창 -->
-            <form method="GET" class="flex items-center gap-2">
+            <form id="searchForm" method="GET" class="flex flex-wrap items-center gap-2">
                 <input type="text" name="q" value="{{ q }}"
                     placeholder="검색: 이름 / 등록번호 / 전화 / 수술명 / 주치의"
                     class="border border-sky-300 rounded-lg px-3 py-2 w-60
                             focus:ring-sky-400 focus:border-sky-400">
+
+                <!-- 🔵 날짜 필터 -->
+                <input type="date" name="date" id="filter_date"
+                    value="{{ selected_date }}"
+                    class="border border-sky-300 rounded-lg px-3 py-2 text-sm
+                           focus:ring-sky-400 focus:border-sky-400">
 
                 <!-- 검색 버튼 -->
                 <button class="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-lg">
                     검색
                 </button>
 
-                <!-- 🔥 리셋 버튼 (검색어 초기화) -->
+                <!-- 🔥 리셋 버튼 (검색어/날짜 초기화 → 오늘로) -->
                 <a href="{{ url_for('admin_preop.preop_list') }}"
-                class="bg-slate-300 hover:bg-slate-400 text-slate-800 px-4 py-2 rounded-lg">
+                   class="bg-slate-300 hover:bg-slate-400 text-slate-800 px-4 py-2 rounded-lg">
                     초기화
                 </a>
             </form>
@@ -350,7 +356,19 @@ function deletePatient(patientId) {
     });
 }
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const dateInput  = document.getElementById("filter_date");
+    const searchForm = document.getElementById("searchForm");
 
+    if (dateInput && searchForm) {
+        // 날짜 변경되면 자동으로 목록 다시 조회
+        dateInput.addEventListener("change", function () {
+            searchForm.submit();
+        });
+    }
+});
+</script>
 
 {% endblock %}
 
