@@ -325,6 +325,106 @@ def preop_create_excel_submit():
 
     flash("환자가 등록되었습니다!", "success")
     return redirect(url_for("admin_preop.preop_list"))
+@admin_preop_bp.route("/parse_excel_gen", methods=["POST"])
+@login_required
+def parse_excel_gen():
+    """엑셀에서 15번 열이 'Gen'인 행들만 파싱해서 미리보기용 JSON으로 반환"""
+    if not (current_user.is_admin or current_user.is_superadmin):
+        return jsonify({"status": "error", "message": "권한이 없습니다."}), 403
+
+    import pandas as pd
+    import re
+    from werkzeug.utils import secure_filename
+    import os
+
+    excel_file = request.files.get("excel_file")
+    if not excel_file:
+        return jsonify({"status": "error", "message": "엑셀 파일이 필요합니다."})
+
+    # 1) 파일 저장
+    filename = secure_filename(excel_file.filename)
+    temp_path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
+    excel_file.save(temp_path)
+
+    # 2) 엑셀 읽기
+    try:
+        df = pd.read_excel(temp_path, header=None, dtype=str)
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": f"엑셀 파일을 읽을 수 없습니다: {e}"
+        })
+
+    # 공백 제거
+    df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+
+    # 유틸 함수들
+    def safe(v):
+        return "" if pd.isna(v) else str(v).strip()
+
+    def extract_date(v):
+        v = safe(v)
+        m = re.search(r"\d{4}-\d{2}-\d{2}", v)
+        return m.group(0) if m else ""
+
+    def extract_age(v):
+        v = safe(v)
+        m = re.search(r"\d+", v)
+        return m.group(0) if m else ""
+
+    def normalize_pid(v):
+        if v is None:
+            return ""
+        s = re.sub(r"\D", "", str(v))
+        s = s.lstrip("0")
+        return s or "0"
+
+    def pid9(v):
+        return normalize_pid(v).zfill(9)
+
+    # 🔵 15번 열(인덱스 14)이 "Gen" 인 행만 선택
+    try:
+        gen_rows = df[df[14].apply(lambda x: safe(x) == "Gen")]
+    except KeyError:
+        return jsonify({
+            "status": "error",
+            "message": "엑셀에 15번째 열(Gen 열)이 없습니다. 열 위치를 확인해주세요."
+        })
+
+    if gen_rows.empty:
+        return jsonify({
+            "status": "error",
+            "message": '15번 열이 "Gen"인 환자를 찾을 수 없습니다.'
+        })
+
+    patients = []
+
+    # 행들을 미리보기용 dict 리스트로 변환
+    for _, r in gen_rows.iterrows():
+        surgery_date = extract_date(r[5])   # 6번째 열: 수술 날짜
+        patient_id   = pid9(r[7])           # 8번째 열(H): 등록번호
+        name         = safe(r[8])           # 9번째 열(I): 이름
+        gender       = safe(r[9])           # 10번째 열(J): 성별
+        age          = extract_age(r[10])   # 11번째 열(K): 나이
+        surgery_name = safe(r[12])          # 13번째 열(M): 수술명
+        doctor_name  = safe(r[13])          # 14번째 열(N): 주치의
+        phone        = safe(r[30])          # 31번째 열(AF): 전화번호
+
+        if not patient_id or not name:
+            continue
+
+        patients.append({
+            "surgery_date": surgery_date,
+            "patient_id":   patient_id,
+            "name":         name,
+            "gender":       gender,
+            "age":          age,
+            "surgery_name": surgery_name,
+            "doctor_name":  doctor_name,
+            "phone":        phone,
+        })
+
+    return jsonify({"status": "success", "patients": patients})
 
 @admin_preop_bp.route("/create_excel_multi", methods=["POST"])
 @login_required
