@@ -47,6 +47,11 @@
       box-shadow: 0 8px 22px rgba(56, 189, 248, 0.7);
       transform: translateY(-1px);
   }
+    /* 🔵 엑셀 미리보기 테이블: 한 줄만 보이게 */
+  .preview-table th,
+  .preview-table td {
+      white-space: nowrap;      /* 줄바꿈 금지 */
+  }
 
 </style>
 
@@ -98,7 +103,7 @@
                 </div>
 
                 <div class="overflow-x-auto rounded-xl border border-sky-100 bg-sky-50/40">
-                    <table class="min-w-full text-sm">
+                    <table class="min-w-full text-sm preview-table">
                         <thead class="bg-sky-100 text-slate-700">
                             <tr>
                                 <th class="px-3 py-2 text-center">수술날짜</th>
