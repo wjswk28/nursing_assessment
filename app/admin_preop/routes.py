@@ -76,22 +76,17 @@ def preop_list():
     if not (current_user.is_admin or current_user.is_superadmin):
         return "권한이 없습니다.", 403
 
+    from sqlalchemy import or_
+
     # 🔍 검색어 & 날짜 파라미터
     q = request.args.get("q", "").strip()
     date_str = request.args.get("date", "").strip()
 
-    # 기본값: 오늘 날짜 (YYYY-MM-DD)
-    if not date_str:
-        date_str = date.today().strftime("%Y-%m-%d")
+    base_query = PreOpPatient.query
 
-    # 기본 쿼리: 선택된 날짜 환자만
-    query = PreOpPatient.query.filter(
-        PreOpPatient.surgery_date == date_str
-    )
-
-    # 검색어가 있으면, 선택된 날짜 안에서 추가 필터
+    # ✅ 검색어가 있으면 → 날짜와 상관없이 전체에서 검색
     if q:
-        query = query.filter(
+        query = base_query.filter(
             or_(
                 PreOpPatient.name.like(f"%{q}%"),
                 PreOpPatient.patient_id.like(f"%{q}%"),
@@ -100,6 +95,14 @@ def preop_list():
                 PreOpPatient.surgery_name.like(f"%{q}%"),
             )
         )
+        # 날짜 입력이 있더라도 검색 모드에서는 날짜를 강제하지 않음
+        selected_date = date_str  # 그냥 화면에만 유지용
+    else:
+        # 🔹 검색어가 없을 때만 날짜 필터 사용
+        if not date_str:
+            date_str = date.today().strftime("%Y-%m-%d")  # 기본 오늘
+        query = base_query.filter(PreOpPatient.surgery_date == date_str)
+        selected_date = date_str
 
     # 정렬
     query = query.order_by(PreOpPatient.surgery_date.asc(), PreOpPatient.name.asc())
@@ -116,7 +119,7 @@ def preop_list():
         patients=patients,
         pagination=pagination,
         q=q,
-        selected_date=date_str,   # 🔵 템플릿으로 날짜 전달
+        selected_date=selected_date,
     )
 
 # ===========================================
