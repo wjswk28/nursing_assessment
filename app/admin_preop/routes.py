@@ -76,13 +76,20 @@ def preop_list():
     if not (current_user.is_admin or current_user.is_superadmin):
         return "권한이 없습니다.", 403
 
-    # ------------------------
-    # 🔍 검색어 받기
-    # ------------------------
+    # 🔍 검색어 & 날짜 파라미터
     q = request.args.get("q", "").strip()
+    date_str = request.args.get("date", "").strip()
 
-    query = PreOpPatient.query
+    # 기본값: 오늘 날짜 (YYYY-MM-DD)
+    if not date_str:
+        date_str = date.today().strftime("%Y-%m-%d")
 
+    # 기본 쿼리: 선택된 날짜 환자만
+    query = PreOpPatient.query.filter(
+        PreOpPatient.surgery_date == date_str
+    )
+
+    # 검색어가 있으면, 선택된 날짜 안에서 추가 필터
     if q:
         query = query.filter(
             or_(
@@ -91,18 +98,13 @@ def preop_list():
                 PreOpPatient.phone.like(f"%{q}%"),
                 PreOpPatient.doctor_name.like(f"%{q}%"),
                 PreOpPatient.surgery_name.like(f"%{q}%"),
-                PreOpPatient.surgery_date.like(f"%{q}%"),
             )
         )
 
-    # ------------------------
     # 정렬
-    # ------------------------
-    query = query.order_by(PreOpPatient.surgery_date.desc())
+    query = query.order_by(PreOpPatient.surgery_date.asc(), PreOpPatient.name.asc())
 
-    # ------------------------
     # 페이지네이션
-    # ------------------------
     page = request.args.get("page", 1, type=int)
     per_page = 10
 
@@ -113,10 +115,9 @@ def preop_list():
         "admin_preop/list.html",
         patients=patients,
         pagination=pagination,
-        q=q
+        q=q,
+        selected_date=date_str,   # 🔵 템플릿으로 날짜 전달
     )
-
-
 
 # ===========================================
 # 관리자용: 환자 상세 보기
@@ -292,83 +293,6 @@ def find_from_excel():
 
     return jsonify({"status": "success", "patient": patient_data})
 
-@admin_preop_bp.route("/parse_excel_gen", methods=["POST"])
-@login_required
-def parse_excel_gen():
-    """엑셀에서 15번 열이 'Gen'인 행만 골라서 JSON으로 반환"""
-    if not (current_user.is_admin or current_user.is_superadmin):
-        return jsonify({"status": "error", "message": "권한이 없습니다."}), 403
-
-    import pandas as pd
-    import re
-    from werkzeug.utils import secure_filename
-    import os
-
-    excel_file = request.files.get("excel_file")
-    if not excel_file:
-        return jsonify({"status": "error", "message": "엑셀 파일이 필요합니다."})
-
-    filename = secure_filename(excel_file.filename)
-    temp_path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
-    excel_file.save(temp_path)
-
-    try:
-        df = pd.read_excel(temp_path, header=None, dtype=str)
-    except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": f"엑셀 파일을 읽을 수 없습니다: {e}"
-        })
-
-    df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
-
-    def safe(v):
-        return "" if pd.isna(v) else str(v).strip()
-
-    def extract_date(v):
-        v = safe(v)
-        m = re.search(r"\d{4}-\d{2}-\d{2}", v)
-        return m.group(0) if m else ""
-
-    def extract_age(v):
-        v = safe(v)
-        m = re.search(r"\d+", v)
-        return m.group(0) if m else ""
-
-    def normalize_pid(v):
-        if v is None:
-            return ""
-        s = re.sub(r"\D", "", str(v))
-        s = s.lstrip("0")
-        return s or "0"
-
-    def pid9(v):
-        return normalize_pid(v).zfill(9)
-
-    # 🔵 15번 열이 'Gen' 인 행만 선택 (15번 열 → 인덱스 14)
-    gen_rows = df[df[14].apply(lambda x: safe(x) == "Gen")]
-
-    if gen_rows.empty:
-        return jsonify({
-            "status": "error",
-            "message": '15번 열이 "Gen"인 환자를 찾을 수 없습니다.'
-        })
-
-    patients = []
-    for _, r in gen_rows.iterrows():
-        patients.append({
-            "surgery_date": extract_date(r[5]),   # 수술 날짜
-            "patient_id":   pid9(r[7]),           # 등록번호
-            "name":         safe(r[8]),           # 이름
-            "gender":       safe(r[9]),           # 성별
-            "age":          extract_age(r[10]),   # 나이
-            "surgery_name": safe(r[12]),          # 수술명
-            "doctor_name":  safe(r[13]),          # 주치의
-            "phone":        safe(r[30]),          # 전화번호 (표시는 안 해도 저장은 가능)
-        })
-
-    return jsonify({"status": "success", "patients": patients})
-
 @admin_preop_bp.route("/create_excel_submit", methods=["POST"])
 @login_required
 def preop_create_excel_submit():
@@ -405,34 +329,89 @@ def preop_create_excel_submit():
 @admin_preop_bp.route("/create_excel_multi", methods=["POST"])
 @login_required
 def preop_create_excel_multi():
-    """미리보기에서 넘어온 환자 목록을 DB에 일괄 저장"""
+    """엑셀에서 15번 열이 'Gen' 인 행들을 모두 PreOpPatient로 일괄 등록"""
     if not (current_user.is_admin or current_user.is_superadmin):
         return jsonify({"status": "error", "message": "권한이 없습니다."}), 403
 
-    data = request.get_json(silent=True) or {}
-    patients_data = data.get("patients", [])
+    import pandas as pd
+    import re
+    from werkzeug.utils import secure_filename
+    import os
 
-    if not patients_data:
+    excel_file = request.files.get("excel_file")
+    if not excel_file:
+        return jsonify({"status": "error", "message": "엑셀 파일이 필요합니다."})
+
+    # 1) 파일 저장
+    filename = secure_filename(excel_file.filename)
+    temp_path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
+    excel_file.save(temp_path)
+
+    # 2) 엑셀 읽기
+    try:
+        df = pd.read_excel(temp_path, header=None, dtype=str)
+    except Exception as e:
         return jsonify({
             "status": "error",
-            "message": "등록할 환자 데이터가 없습니다."
+            "message": f"엑셀 파일을 읽을 수 없습니다: {e}"
+        })
+
+    # 공백 제거
+    df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+
+    # 유틸 함수들
+    def safe(v):
+        return "" if pd.isna(v) else str(v).strip()
+
+    def extract_date(v):
+        v = safe(v)
+        m = re.search(r"\d{4}-\d{2}-\d{2}", v)
+        return m.group(0) if m else ""
+
+    def extract_age(v):
+        v = safe(v)
+        m = re.search(r"\d+", v)
+        return m.group(0) if m else ""
+
+    def normalize_pid(v):
+        if v is None:
+            return ""
+        s = re.sub(r"\D", "", str(v))
+        s = s.lstrip("0")
+        return s or "0"
+
+    def pid9(v):
+        return normalize_pid(v).zfill(9)
+
+    # 3) 🔵 15번 열이 "Gen" 인 행만 선택 (15번 열 → 인덱스 14)
+    gen_rows = df[df[14].apply(lambda x: safe(x) == "Gen")]
+
+    # 만약 첫 행이 헤더이면서 "Gen" 이라면, 아래 한 줄로 헤더를 제외할 수 있음
+    # gen_rows = gen_rows[gen_rows.index > 0]
+
+    if gen_rows.empty:
+        return jsonify({
+            "status": "error",
+            "message": '15번 열이 "Gen"인 환자를 찾을 수 없습니다.'
         })
 
     count = 0
-    for p in patients_data:
-        surgery_date = p.get("surgery_date")
-        patient_id   = p.get("patient_id")
-        name         = p.get("name")
-        gender       = p.get("gender")
-        age          = p.get("age")
-        surgery_name = p.get("surgery_name")
-        doctor_name  = p.get("doctor_name")
-        phone        = p.get("phone")
+
+    # 4) 각 행을 PreOpPatient 로 저장
+    for _, r in gen_rows.iterrows():
+        surgery_date = extract_date(r[5])   # 6번째 열: 수술 날짜
+        patient_id   = pid9(r[7])           # 8번째 열(H): 등록번호
+        name         = safe(r[8])           # 9번째 열(I): 이름
+        gender       = safe(r[9])           # 10번째 열(J): 성별
+        age          = extract_age(r[10])   # 11번째 열(K): 나이
+        surgery_name = safe(r[12])          # 13번째 열(M): 수술명
+        doctor_name  = safe(r[13])          # 14번째 열(N): 주치의
+        phone        = safe(r[30])          # 31번째 열(AF): 전화번호
 
         if not patient_id or not name:
             continue
 
-        # 중복 방지: 같은 수술일 + 등록번호가 있으면 스킵
+        # 중복 방지: 같은 수술일 + 등록번호가 이미 있으면 건너뜀
         existing = PreOpPatient.query.filter_by(
             patient_id=patient_id,
             surgery_date=surgery_date,
