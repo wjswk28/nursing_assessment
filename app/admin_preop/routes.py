@@ -292,6 +292,82 @@ def find_from_excel():
 
     return jsonify({"status": "success", "patient": patient_data})
 
+@admin_preop_bp.route("/parse_excel_gen", methods=["POST"])
+@login_required
+def parse_excel_gen():
+    """엑셀에서 15번 열이 'Gen'인 행만 골라서 JSON으로 반환"""
+    if not (current_user.is_admin or current_user.is_superadmin):
+        return jsonify({"status": "error", "message": "권한이 없습니다."}), 403
+
+    import pandas as pd
+    import re
+    from werkzeug.utils import secure_filename
+    import os
+
+    excel_file = request.files.get("excel_file")
+    if not excel_file:
+        return jsonify({"status": "error", "message": "엑셀 파일이 필요합니다."})
+
+    filename = secure_filename(excel_file.filename)
+    temp_path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
+    excel_file.save(temp_path)
+
+    try:
+        df = pd.read_excel(temp_path, header=None, dtype=str)
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": f"엑셀 파일을 읽을 수 없습니다: {e}"
+        })
+
+    df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+
+    def safe(v):
+        return "" if pd.isna(v) else str(v).strip()
+
+    def extract_date(v):
+        v = safe(v)
+        m = re.search(r"\d{4}-\d{2}-\d{2}", v)
+        return m.group(0) if m else ""
+
+    def extract_age(v):
+        v = safe(v)
+        m = re.search(r"\d+", v)
+        return m.group(0) if m else ""
+
+    def normalize_pid(v):
+        if v is None:
+            return ""
+        s = re.sub(r"\D", "", str(v))
+        s = s.lstrip("0")
+        return s or "0"
+
+    def pid9(v):
+        return normalize_pid(v).zfill(9)
+
+    # 🔵 15번 열이 'Gen' 인 행만 선택 (15번 열 → 인덱스 14)
+    gen_rows = df[df[14].apply(lambda x: safe(x) == "Gen")]
+
+    if gen_rows.empty:
+        return jsonify({
+            "status": "error",
+            "message": '15번 열이 "Gen"인 환자를 찾을 수 없습니다.'
+        })
+
+    patients = []
+    for _, r in gen_rows.iterrows():
+        patients.append({
+            "surgery_date": extract_date(r[5]),   # 수술 날짜
+            "patient_id":   pid9(r[7]),           # 등록번호
+            "name":         safe(r[8]),           # 이름
+            "gender":       safe(r[9]),           # 성별
+            "age":          extract_age(r[10]),   # 나이
+            "surgery_name": safe(r[12]),          # 수술명
+            "doctor_name":  safe(r[13]),          # 주치의
+            "phone":        safe(r[30]),          # 전화번호 (표시는 안 해도 저장은 가능)
+        })
+
+    return jsonify({"status": "success", "patients": patients})
 
 @admin_preop_bp.route("/create_excel_submit", methods=["POST"])
 @login_required
@@ -325,6 +401,66 @@ def preop_create_excel_submit():
 
     flash("환자가 등록되었습니다!", "success")
     return redirect(url_for("admin_preop.preop_list"))
+
+@admin_preop_bp.route("/create_excel_multi", methods=["POST"])
+@login_required
+def preop_create_excel_multi():
+    """미리보기에서 넘어온 환자 목록을 DB에 일괄 저장"""
+    if not (current_user.is_admin or current_user.is_superadmin):
+        return jsonify({"status": "error", "message": "권한이 없습니다."}), 403
+
+    data = request.get_json(silent=True) or {}
+    patients_data = data.get("patients", [])
+
+    if not patients_data:
+        return jsonify({
+            "status": "error",
+            "message": "등록할 환자 데이터가 없습니다."
+        })
+
+    count = 0
+    for p in patients_data:
+        surgery_date = p.get("surgery_date")
+        patient_id   = p.get("patient_id")
+        name         = p.get("name")
+        gender       = p.get("gender")
+        age          = p.get("age")
+        surgery_name = p.get("surgery_name")
+        doctor_name  = p.get("doctor_name")
+        phone        = p.get("phone")
+
+        if not patient_id or not name:
+            continue
+
+        # 중복 방지: 같은 수술일 + 등록번호가 있으면 스킵
+        existing = PreOpPatient.query.filter_by(
+            patient_id=patient_id,
+            surgery_date=surgery_date,
+        ).first()
+        if existing:
+            continue
+
+        patient = PreOpPatient(
+            name=name,
+            patient_id=patient_id,
+            age=age,
+            phone=phone,
+            doctor_name=doctor_name,
+            surgery_date=surgery_date,
+            gender=gender,
+            surgery_name=surgery_name,
+            token=uuid.uuid4().hex,
+        )
+        db.session.add(patient)
+        count += 1
+
+    db.session.commit()
+
+    return jsonify({
+        "status": "success",
+        "count": count,
+        "redirect_url": url_for("admin_preop.preop_list"),
+    })
 
 @admin_preop_bp.route("/create_excel_full")
 @login_required
