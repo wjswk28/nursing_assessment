@@ -43,12 +43,6 @@
                     class="border border-sky-300 rounded-lg px-3 py-2 w-60
                             focus:ring-sky-400 focus:border-sky-400">
 
-                <!-- 🔵 날짜 필터 -->
-                <input type="date" name="date" id="filter_date"
-                    value="{{ selected_date }}"
-                    class="border border-sky-300 rounded-lg px-3 py-2 text-sm
-                           focus:ring-sky-400 focus:border-sky-400">
-
                 <!-- 검색 버튼 -->
                 <button class="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-lg">
                     검색
@@ -59,6 +53,11 @@
                    class="bg-slate-300 hover:bg-slate-400 text-slate-800 px-4 py-2 rounded-lg">
                     초기화
                 </a>
+                <!-- 🔵 날짜 필터 -->
+                <input type="date" name="date" id="filter_date"
+                    value="{{ selected_date }}"
+                    class="border border-sky-300 rounded-lg px-3 py-2 text-sm
+                           focus:ring-sky-400 focus:border-sky-400">
             </form>
 
             <!-- 환자 등록 버튼 -->
