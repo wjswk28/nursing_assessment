@@ -80,21 +80,40 @@
             {% set input_class = "w-full outline-none text-slate-700 placeholder-slate-400" %}
 
             <div>
-                <label class="{{ label_class }}">등록번호</label>
-                <div class="{{ input_box }}">
-                    <i data-lucide="hash" class="w-5 h-5 text-sky-600"></i>
-                    <input id="excel_patient_id" type="text" class="{{ input_class }}" placeholder="예: 87654">
-                </div>
-            </div>
-
-            <div>
                 <label class="{{ label_class }}">엑셀 파일 업로드</label>
                 <div id="dropZone"
                     class="border-2 border-dashed border-sky-300 rounded-xl p-10 text-center cursor-pointer transition bg-white">
                     <p class="text-sky-700 font-semibold text-lg">여기에 엑셀 파일을 끌어놓으세요</p>
-                    <p class="text-slate-500 text-sm mt-1">등록번호와 일치하는 환자 정보를 자동으로 불러옵니다</p>
+                    <p class="text-slate-500 text-sm mt-1">환자 정보를 자동으로 불러옵니다</p>
                 </div>
                 <input type="file" id="excelFileInput" class="hidden" accept=".xlsx,.xls">
+            </div>
+            <!-- 🔵 엑셀에서 불러온 환자 미리보기 -->
+            <div id="previewWrapper" class="mt-6 hidden">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-semibold text-slate-700">
+                        등록 예정 환자 목록
+                    </h3>
+                    <span id="previewCount" class="text-xs text-slate-500"></span>
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border border-sky-100 bg-sky-50/40">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-sky-100 text-slate-700">
+                            <tr>
+                                <th class="px-3 py-2 text-center">수술날짜</th>
+                                <th class="px-3 py-2 text-center">등록번호</th>
+                                <th class="px-3 py-2 text-center">이름</th>
+                                <th class="px-3 py-2 text-center">성별</th>
+                                <th class="px-3 py-2 text-center">나이</th>
+                                <th class="px-3 py-2 text-center">수술명</th>
+                                <th class="px-3 py-2 text-center">주치의</th>
+                                <th class="px-3 py-2 text-center">삭제</th>
+                            </tr>
+                        </thead>
+                        <tbody id="previewBody" class="bg-white/70"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -193,6 +212,7 @@
             </a>
 
             <button type="submit"
+                id="submitBtn"
                 form="patientForm"
                 class="px-8 py-3 rounded-xl bg-gradient-to-r from-sky-600 to-sky-700 text-white font-bold hover:from-sky-700 hover:to-sky-800 transition shadow-lg">
                 환자 등록하기
@@ -207,56 +227,42 @@
 ================================*/
 let currentMode = "excel";  // 기본은 엑셀 모드
 
-const excelSection = document.getElementById("excelSection");
-const patientForm  = document.getElementById("patientForm");
-const btnModeExcel = document.getElementById("modeExcel");
-const btnModeManual = document.getElementById("modeManual");
+const excelSection   = document.getElementById("excelSection");
+const patientForm    = document.getElementById("patientForm");
+const btnModeExcel   = document.getElementById("modeExcel");
+const btnModeManual  = document.getElementById("modeManual");
+const submitBtn      = document.getElementById("submitBtn");
+
+// 미리보기 관련 요소
+const previewWrapper = document.getElementById("previewWrapper");
+const previewBody    = document.getElementById("previewBody");
+const previewCount   = document.getElementById("previewCount");
+
+// 엑셀에서 읽어온 환자들을 임시로 저장
+window.uploadedPatients = [];
 
 function setMode(mode) {
     currentMode = mode;
 
     if (mode === "excel") {
-        // 탭 스타일
         btnModeExcel.classList.add("active");
         btnModeManual.classList.remove("active");
-        // 보여줄/숨길 영역
         excelSection.classList.remove("hidden");
         patientForm.classList.add("hidden");
     } else {
         btnModeManual.classList.add("active");
         btnModeExcel.classList.remove("active");
-
         excelSection.classList.add("hidden");
         patientForm.classList.remove("hidden");
 
-        // 필요하면 엑셀 입력 초기화
-        document.getElementById("excel_patient_id").value = "";
+        // 수동 모드로 전환 시 미리보기 초기화
+        window.uploadedPatients = [];
+        renderPreview();
     }
 }
 
 btnModeExcel.addEventListener("click", () => setMode("excel"));
 btnModeManual.addEventListener("click", () => setMode("manual"));
-
-
-/* ===============================
-   등록번호 정규화: 숫자만 + 앞 0 제거
-   예) "000065569" -> "65569", 65569 -> "65569"
-================================*/
-function normalizeRegNo(value) {
-    if (value === null || value === undefined) return "";
-
-    // 1) 문자열로 만들기
-    let s = String(value).trim();
-
-    // 2) 숫자만 남기기 (혹시 문자 섞여도 방어)
-    s = s.replace(/\D/g, "");
-
-    // 3) 앞의 0 제거
-    s = s.replace(/^0+/, "");
-
-    // 4) 다 지워졌으면 빈 문자열 반환
-    return s;
-}
 
 /* ===============================
    성별 선택
@@ -269,9 +275,9 @@ function selectGender(value, element) {
 }
 
 /* ===============================
-   엑셀 업로드 처리
+   엑셀 업로드 처리 (드래그 & 클릭)
 ================================*/
-const dropZone = document.getElementById("dropZone");
+const dropZone   = document.getElementById("dropZone");
 const excelInput = document.getElementById("excelFileInput");
 
 dropZone.addEventListener("click", () => excelInput.click());
@@ -290,52 +296,133 @@ excelInput.addEventListener("change", () => {
 });
 
 /* ===============================
-   엑셀 전송
+   미리보기 테이블 렌더링
+================================*/
+function renderPreview() {
+    const patients = window.uploadedPatients || [];
+
+    if (!patients.length) {
+        previewWrapper.classList.add("hidden");
+        previewBody.innerHTML = "";
+        previewCount.textContent = "";
+        return;
+    }
+
+    previewWrapper.classList.remove("hidden");
+    previewBody.innerHTML = "";
+    previewCount.textContent = `총 ${patients.length}명`;
+
+    patients.forEach((p, idx) => {
+        const tr = document.createElement("tr");
+        tr.className = idx % 2 === 0 ? "bg-white" : "bg-sky-50/60";
+        tr.innerHTML = `
+            <td class="px-3 py-2 text-center text-slate-700 text-sm">${p.surgery_date || ""}</td>
+            <td class="px-3 py-2 text-center font-mono text-sm">${p.patient_id || ""}</td>
+            <td class="px-3 py-2 text-center font-semibold text-slate-800 text-sm">${p.name || ""}</td>
+            <td class="px-3 py-2 text-center text-sm">${p.gender || ""}</td>
+            <td class="px-3 py-2 text-center text-sm">${p.age || ""}</td>
+            <td class="px-3 py-2 text-center text-sm">${p.surgery_name || ""}</td>
+            <td class="px-3 py-2 text-center text-sm">${p.doctor_name || ""}</td>
+            <td class="px-3 py-2 text-center">
+                <button type="button"
+                        class="text-rose-500 hover:text-rose-600 text-sm btn-remove"
+                        data-index="${idx}">
+                    삭제
+                </button>
+            </td>
+        `;
+        previewBody.appendChild(tr);
+    });
+}
+
+// 삭제 버튼 (행 삭제)
+previewBody.addEventListener("click", (e) => {
+    const btn = e.target.closest(".btn-remove");
+    if (!btn) return;
+
+    const idx = parseInt(btn.dataset.index, 10);
+    if (Number.isNaN(idx)) return;
+
+    window.uploadedPatients.splice(idx, 1);
+    renderPreview();
+});
+
+/* ===============================
+   엑셀 전송 → Gen 환자 목록만 받아오기
 ================================*/
 function sendExcel(file) {
 
     if (currentMode !== "excel") return;
 
-    const rawPid = document.getElementById("excel_patient_id").value.trim();
-    if (!rawPid) return alert("먼저 등록번호를 입력하세요!");
-
-    // 🔵 등록번호를 정규화해서 사용 (000065569, 65569 둘 다 OK)
-    const pid = normalizeRegNo(rawPid);
-    if (!pid) return alert("등록번호는 숫자만 입력해주세요.");
+    if (!file) {
+        alert("엑셀 파일을 선택해주세요.");
+        return;
+    }
 
     const formData = new FormData();
     formData.append("excel_file", file);
-    formData.append("patient_id", pid);   // 🔵 정규화된 값 전송
 
-    fetch("/admin/preop/find_from_excel", {
+    fetch("/admin/preop/parse_excel_gen", {
         method: "POST",
         body: formData
     })
     .then(r => r.json())
     .then(data => {
-        if (data.status !== "success") return alert(data.message);
+        if (data.status !== "success") {
+            alert(data.message || "엑셀을 읽는 중 오류가 발생했습니다.");
+            return;
+        }
 
-        const p = data.patient;
-
-        document.getElementById("surgery_date").value = p.surgery_date;
-
-        // 🔵 9자리로 0 패딩해서 보여주고 싶으면 이렇게
-        const digits = normalizeRegNo(p.patient_id);
-        document.getElementById("patient_id").value = digits.padStart(9, "0");
-
-        document.getElementById("name").value = p.name;
-        document.getElementById("gender").value = p.gender;
-
-        if (p.gender === "M") selectGender("M", document.querySelectorAll(".gender-btn")[0]);
-        if (p.gender === "F") selectGender("F", document.querySelectorAll(".gender-btn")[1]);
-
-        document.getElementById("age").value = p.age;
-        document.getElementById("surgery_name").value = p.surgery_name;
-        document.getElementById("doctor_name").value = p.doctor_name;
-        document.getElementById("phone").value = p.phone;
+        window.uploadedPatients = data.patients || [];
+        renderPreview();
+    })
+    .catch(err => {
+        console.error(err);
+        alert("서버 통신 중 오류가 발생했습니다.");
     });
 }
+
+/* ===============================
+   하단 '환자 등록하기' 버튼 처리
+   - manual 모드: 기존 form 제출
+   - excel 모드 : 미리보기 목록을 DB에 저장
+================================*/
+submitBtn.addEventListener("click", function(e) {
+    if (currentMode === "manual") {
+        // 수동 모드에서는 기존 폼 제출 그대로 진행
+        return;
+    }
+
+    // 엑셀 모드에서는 직접 처리
+    e.preventDefault();
+
+    const patients = window.uploadedPatients || [];
+    if (!patients.length) {
+        alert("엑셀에서 불러온 환자가 없습니다.");
+        return;
+    }
+
+    fetch("/admin/preop/create_excel_multi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ patients: patients })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status !== "success") {
+            alert(data.message || "등록 중 오류가 발생했습니다.");
+            return;
+        }
+
+        alert(`환자 ${data.count}명이 등록되었습니다.`);
+        if (data.redirect_url) {
+            window.location.href = data.redirect_url;
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("서버 통신 중 오류가 발생했습니다.");
+    });
+});
 </script>
-
-
 {% endblock %}
