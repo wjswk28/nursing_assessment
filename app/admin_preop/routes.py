@@ -5,6 +5,8 @@ from app.models import PreOpPatient, PreOpAssessment
 from app import db
 from datetime import datetime, date     # ← date 추가
 import uuid
+from zoneinfo import ZoneInfo
+KST = ZoneInfo("Asia/Seoul")
 
 
 
@@ -100,7 +102,7 @@ def preop_list():
     else:
         # 🔹 검색어가 없을 때만 날짜 필터 사용
         if not date_str:
-            date_str = date.today().strftime("%Y-%m-%d")  # 기본 오늘
+            date_str = datetime.now(KST).date().strftime("%Y-%m-%d")  # ✅ 한국 오늘
         query = base_query.filter(PreOpPatient.surgery_date == date_str)
         selected_date = date_str
 
