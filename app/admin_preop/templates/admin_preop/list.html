@@ -510,17 +510,27 @@ async function sendSms() {
             },
             body: JSON.stringify({ msg })
         });
-
-        const data = await res.json();
-
-        if (data.status === "success") {
-            closeSmsModal();
-            showToastSms(data.message || "문자가 전송되었습니다.");
-            markSmsSent(_smsPatientId);
-        } else {
-            alert("전송 실패: " + (data.message || "알 수 없는 오류"));
-            console.error("SMS ERROR:", data);
+        
+        // ✅ 응답이 JSON이 아닐 때 대비(에러 페이지 등)
+        let data = {};
+        try {
+            data = await res.json();
+        } catch (e) {
+            data = { status: "error", message: "서버 응답을 해석할 수 없습니다." };
         }
+        
+        // ✅ HTTP 실패거나 status가 success가 아니면 실패 처리
+        if (!res.ok || data.status !== "success") {
+            alert("전송 실패: " + (data.message || `HTTP ${res.status}`));
+            console.error("SMS ERROR:", { http: res.status, data });
+            return;
+        }
+        
+        // ✅ 성공
+        closeSmsModal();
+        showToastSms(data.message || "문자가 전송되었습니다.");
+        markSmsSent(_smsPatientId);
+
     } catch (e) {
         alert("서버 오류가 발생했습니다.");
         console.error(e);
