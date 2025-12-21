@@ -7,51 +7,9 @@ from datetime import datetime, date     # ← date 추가
 import uuid
 from zoneinfo import ZoneInfo
 KST = ZoneInfo("Asia/Seoul")
-
-
-
-"""
-# ===========================================
-# 관리자용: 환자 등록
-# ===========================================
-@admin_preop_bp.route("/create", methods=["GET", "POST"])
-@login_required
-def preop_create():
-
-    if not (current_user.is_admin or current_user.is_superadmin):
-        return "권한이 없습니다.", 403
-
-    if request.method == "POST":
-        name = request.form.get("name")
-        patient_id = request.form.get("patient_id")
-        birth_date = request.form.get("birth_date")
-        phone = request.form.get("phone")
-        doctor_name = request.form.get("doctor_name")
-        surgery_date = request.form.get("surgery_date")
-
-        # New fields
-        gender = request.form.get("gender")
-        surgery_name = request.form.get("surgery_name")
-
-        patient = PreOpPatient(
-            name=name,
-            patient_id=patient_id,
-            birth_date=birth_date,
-            phone=phone,
-            doctor_name=doctor_name,
-            surgery_date=surgery_date,
-            gender=gender,               # ← 추가
-            surgery_name=surgery_name,   # ← 추가
-            token=uuid.uuid4().hex
-        )
-
-        db.session.add(patient)
-        db.session.commit()
-
-        flash("환자가 등록되었습니다.", "success")
-        return redirect(url_for("admin_preop.preop_list"))
-
-    return render_template("admin_preop/create.html")"""
+import os
+import re
+import requests
 
 # ===========================================
 # 관리자용: 엑셀 기반 환자 등록 페이지
@@ -77,8 +35,6 @@ def preop_list():
 
     if not (current_user.is_admin or current_user.is_superadmin):
         return "권한이 없습니다.", 403
-
-    from sqlalchemy import or_
 
     # 🔍 검색어 & 날짜 파라미터
     q = request.args.get("q", "").strip()
@@ -158,7 +114,11 @@ def preop_view(patient_id):
 # 관리자용: 환자 정보 수정
 # ===========================================   
 @admin_preop_bp.route("/edit/<int:patient_id>", methods=["GET", "POST"])
+@login_required
 def preop_edit(patient_id):
+
+    if not (current_user.is_admin or current_user.is_superadmin):
+        return "권한이 없습니다.", 403
 
     patient = PreOpPatient.query.get_or_404(patient_id)
 
@@ -513,5 +473,87 @@ def preop_delete(patient_id):
 
     return jsonify({"status": "success", "message": "삭제되었습니다."})
 
+# ===========================================
+# ✅ 알리고(SmartSMS) 문자 전송 유틸
+# ===========================================
+def _norm_phone(p: str) -> str:
+    return re.sub(r"[^0-9]", "", p or "")
+
+def _send_aligo_sms(to_phone: str, msg: str):
+    """
+    환경변수 필요:
+      ALIGO_USER_ID, ALIGO_API_KEY, ALIGO_SENDER
+    선택:
+      ALIGO_TESTMODE=Y  (테스트 모드)
+    """
+    user_id = os.environ.get("ALIGO_USER_ID", "").strip()
+    api_key = os.environ.get("ALIGO_API_KEY", "").strip()
+    sender  = os.environ.get("ALIGO_SENDER", "").strip()
+    testmode = os.environ.get("ALIGO_TESTMODE", "").strip().upper() == "Y"
+
+    if not user_id or not api_key or not sender:
+        return 500, {"error": "알리고 환경변수(ALIGO_USER_ID / ALIGO_API_KEY / ALIGO_SENDER)가 설정되지 않았습니다."}
+
+    payload = {
+        "key": api_key,
+        "user_id": user_id,
+        "sender": _norm_phone(sender),
+        "receiver": _norm_phone(to_phone),
+        "msg": msg,
+        "testmode_yn": "Y" if testmode else "N",
+    }
+
+    try:
+        r = requests.post("https://apis.aligo.in/send/", data=payload, timeout=10)
+        try:
+            return r.status_code, r.json()
+        except Exception:
+            return r.status_code, {"raw": r.text}
+    except Exception as e:
+        return 500, {"error": f"알리고 요청 실패: {str(e)}"}
+
+# ===========================================
+# ✅ 문자 전송 API (프론트에서 fetch로 호출)
+# POST /admin/preop/sms/send/<patient_id>
+# body: { "msg": "..." }
+# ===========================================
+@admin_preop_bp.route("/sms/send/<int:patient_id>", methods=["POST"])
+@login_required
+def preop_send_sms(patient_id):
+
+    if not (current_user.is_admin or current_user.is_superadmin):
+        return jsonify({"status": "error", "message": "권한이 없습니다."}), 403
+
+    patient = PreOpPatient.query.get_or_404(patient_id)
+
+    if not patient.phone:
+        return jsonify({"status": "error", "message": "환자 전화번호가 없습니다."}), 400
+
+    data = request.get_json(silent=True) or {}
+    msg = (data.get("msg") or "").strip()
+
+    if not msg:
+        return jsonify({"status": "error", "message": "메시지가 비어있습니다."}), 400
+
+    status_code, resp = _send_aligo_sms(patient.phone, msg)
+
+    if status_code != 200:
+        return jsonify({
+            "status": "error",
+            "message": "문자 발송에 실패했습니다. (서버 로그를 확인하세요)"
+        }), 502
+
+    # 알리고 응답에서 실패 코드가 오는 경우 대비
+    if isinstance(resp, dict) and resp.get("result_code") not in (None, "1"):
+        return jsonify({
+            "status": "error",
+            "message": f"문자 발송 실패: {resp.get('message', '알 수 없음')}"
+        }), 400
+        
+    patient.sms_sent = True
+    patient.sms_sent_at = datetime.now()
+    db.session.commit()
+
+    return jsonify({"status": "success", "message": "문자가 전송되었습니다.", "aligo": resp}), 200
 
 
