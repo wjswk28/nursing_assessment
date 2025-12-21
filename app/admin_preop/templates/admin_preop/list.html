@@ -91,6 +91,7 @@
                     <col class="col-action">
                     <col class="col-action">
                     <col class="col-action">
+                    <col class="col-action">  <!-- ✅ 문자 추가 -->
                 </colgroup>
 
                 <!-- 헤더 -->
@@ -109,6 +110,7 @@
                         <th class="px-2 py-3">상세</th>           <!-- 좁게 -->
                         <th class="px-2 py-3">수정</th>           <!-- 좁게 -->
                         <th class="px-2 py-3">링크</th>           <!-- 좁게 -->
+                        <th class="px-2 py-3">문자</th>   <!-- ✅ 추가 -->
                         <th class="px-2 py-3">삭제</th>
                     </tr>
                 </thead>
@@ -189,7 +191,7 @@
                         <!-- 수정 -->
                         <td class="px-3 py-3 text-center whitespace-nowrap">
                             <a href="{{ url_for('admin_preop.preop_edit', patient_id=p.id) }}"
-                               class="text-yellow-600 hover:underline font-semibold">
+                                class="text-yellow-600 hover:underline font-semibold">
                                 수정
                             </a>
                         </td>
@@ -199,6 +201,25 @@
                             <button onclick="copyLink('{{ request.host_url }}preop/start/{{ p.token }}')"
                                     class="text-sky-600 hover:underline font-semibold">
                                 <i data-lucide="copy" class="w-5 h-5"></i>
+                            </button>
+                        </td>
+                        <!-- ✅ 문자 -->
+                        <td class="px-3 py-3 text-center">
+                            <button type="button"
+                                    id="smsBtn-{{ p.id }}"
+                                    class="transition sms-btn
+                                            {% if p.sms_sent %} text-emerald-600 {% else %} text-sky-600 hover:text-sky-800 {% endif %}"
+                                    title="{% if p.sms_sent %}전송 완료{% else %}문자 보내기{% endif %}"
+                                    data-patient-id="{{ p.id }}"
+                                    data-name="{{ p.name }}"
+                                    data-phone="{{ p.phone or '' }}"
+                                    data-token="{{ p.token }}"
+                                    {% if p.sms_sent %} disabled {% endif %}>
+                                {% if p.sms_sent %}
+                                    <i data-lucide="check-circle" class="w-5 h-5"></i>
+                                {% else %}
+                                    <i data-lucide="message-square" class="w-5 h-5"></i>
+                                {% endif %}
                             </button>
                         </td>
                         <!-- 삭제 -->
@@ -217,6 +238,7 @@
         </div>
         {% if pagination.pages > 1 %}
         <div class="flex justify-center mt-6">
+
             <!-- 이전 버튼 -->
             {% if pagination.has_prev %}
                 <a href="{{ url_for('admin_preop.preop_list', page=pagination.prev_num, q=q, date=selected_date) }}"
@@ -248,6 +270,7 @@
                     다음
                 </a>
             {% endif %}
+
         </div>
         {% endif %}
 
@@ -255,24 +278,81 @@
     </div>
 </div>
 <div id="toastPhone"
-     class="hidden fixed top-5 left-1/2 transform -translate-x-1/2 
+    class="hidden fixed top-5 left-1/2 transform -translate-x-1/2 
             bg-sky-700 text-white py-3 px-6 rounded-lg shadow-lg z-50
             transition opacity-0 duration-300">
     전화번호가 복사 되었습니다.
 </div>
 <div id="toastLink"
-     class="hidden fixed top-20 left-1/2 transform -translate-x-1/2 
+    class="hidden fixed top-20 left-1/2 transform -translate-x-1/2 
             bg-green-600 text-white py-3 px-6 rounded-lg shadow-lg z-50
             transition opacity-0 duration-300">
     경로가 복사 되었습니다.
 </div>
 <!-- 등록 성공 토스트 -->
 <div id="toastRegister"
-     class="hidden fixed top-10 left-1/2 transform -translate-x-1/2
+    class="hidden fixed top-10 left-1/2 transform -translate-x-1/2
             bg-green-600 text-white py-3 px-6 rounded-lg shadow-lg z-50
             transition opacity-0 duration-300">
     환자가 등록되었습니다.
 </div>
+<!-- ✅ 문자 전송 토스트 -->
+<div id="toastSms"
+    class="hidden fixed top-32 left-1/2 transform -translate-x-1/2
+            bg-sky-700 text-white py-3 px-6 rounded-lg shadow-lg z-50
+            transition opacity-0 duration-300">
+    문자가 전송되었습니다.
+</div>
+
+<!-- ✅ 문자 전송 모달 -->
+<div id="smsModal" class="hidden fixed inset-0 z-50">
+    <!-- overlay -->
+    <div class="absolute inset-0 bg-black/30" onclick="closeSmsModal()"></div>
+
+    <!-- modal -->
+    <div class="relative min-h-full flex items-center justify-center p-4">
+        <div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-sky-100 overflow-hidden">
+            <div class="px-5 py-4 bg-sky-50 border-b flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="message-square" class="w-5 h-5 text-sky-700"></i>
+                    <span class="font-bold text-sky-800">문자 보내기</span>
+                </div>
+                <button type="button" class="text-slate-500 hover:text-slate-700" onclick="closeSmsModal()">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="px-5 py-4 space-y-3">
+                <div class="text-sm text-slate-700">
+                    <div><span class="font-semibold">수신자:</span> <span id="smsToName">-</span></div>
+                    <div><span class="font-semibold">전화:</span> <span id="smsToPhone">-</span></div>
+                </div>
+
+                <textarea id="smsMsg"
+                            class="w-full border border-sky-200 rounded-xl px-3 py-3 text-sm focus:ring-sky-400 focus:border-sky-400"
+                            rows="6"></textarea>
+
+                <p class="text-xs text-slate-500">
+                    * 기본 메시지는 항상 동일하며, 끝에 환자 링크가 자동으로 붙습니다.
+                </p>
+            </div>
+
+            <div class="px-5 py-4 border-t bg-white flex justify-end gap-2">
+                <button type="button"
+                        class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800"
+                        onclick="closeSmsModal()">
+                    취소
+                </button>
+                <button id="btnSendSms" type="button"
+                        class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white shadow"
+                        onclick="sendSms()">
+                    전송
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 
 <script>
@@ -306,8 +386,7 @@ function copyPhone(phone) {
         toast.classList.add("hidden");
     }, 3000);
 }
-</script>
-<script>
+
 document.addEventListener("DOMContentLoaded", function () {
     const messages = JSON.parse('{{ get_flashed_messages(with_categories=true) | tojson | safe }}');
 
@@ -352,8 +431,7 @@ function deletePatient(patientId) {
         console.error(err);
     });
 }
-</script>
-<script>
+
 document.addEventListener("DOMContentLoaded", function () {
     const dateInput  = document.getElementById("filter_date");
     const searchForm = document.getElementById("searchForm");
@@ -365,6 +443,138 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 });
+
+let _smsPatientId = null;
+let _smsName = "";
+let _smsPhone = "";
+let _smsLink = "";
+
+// ✅ 너가 원하는 "항상 같은 기본 메시지" 본문(끝에 링크 붙임)
+// 필요하면 여기 문구만 바꾸면 됨.
+function buildDefaultMessage(name, link) {
+    return `${name}님 안녕하세요.\n가자연세병원[서울]입니다.
+    \n빠른 입원수속과 정확한 환자 정보를 위하여 셀프 체크리스트를 시행 중입니다. 아래 링크 들어가셔서 수술날짜 확인 후 작성 해주시면 되겠습니다.\n수술 당일 금식(물포함) 꼭! 당부드립니다.
+    \n${link}`;
+}
+
+function openSmsModal(patientId, name, phone, token) {
+    _smsPatientId = patientId;
+    _smsName = name || "-";
+    _smsPhone = phone || "-";
+    _smsLink = `${window.location.origin}/preop/start/${token}`;
+
+    document.getElementById("smsToName").textContent = _smsName;
+    document.getElementById("smsToPhone").textContent = _smsPhone;
+
+    // ✅ 기본 메시지 자동 세팅
+    document.getElementById("smsMsg").value = buildDefaultMessage(_smsName, _smsLink);
+
+    document.getElementById("smsModal").classList.remove("hidden");
+}
+
+function closeSmsModal() {
+    document.getElementById("smsModal").classList.add("hidden");
+}
+
+function showToastSms(text) {
+    const toast = document.getElementById("toastSms");
+    if (!toast) return;
+
+    toast.textContent = text || "문자가 전송되었습니다.";
+    toast.classList.remove("hidden");
+    toast.style.opacity = "1";
+
+    setTimeout(() => { toast.style.opacity = "0"; }, 2500);
+    setTimeout(() => { toast.classList.add("hidden"); }, 3000);
+}
+
+async function sendSms() {
+    if (!_smsPatientId) return;
+
+    const msg = (document.getElementById("smsMsg").value || "").trim();
+    if (!msg) {
+        alert("메시지가 비어있습니다.");
+        return;
+    }
+
+    const btn = document.getElementById("btnSendSms");
+    btn.disabled = true;
+    btn.classList.add("opacity-60", "cursor-not-allowed");
+
+    try {
+        const res = await fetch(`/admin/preop/sms/send/${_smsPatientId}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            body: JSON.stringify({ msg })
+        });
+
+        const data = await res.json();
+
+        if (data.status === "success") {
+            closeSmsModal();
+            showToastSms(data.message || "문자가 전송되었습니다.");
+            markSmsSent(_smsPatientId);
+        } else {
+            alert("전송 실패: " + (data.message || "알 수 없는 오류"));
+            console.error("SMS ERROR:", data);
+        }
+    } catch (e) {
+        alert("서버 오류가 발생했습니다.");
+        console.error(e);
+    } finally {
+        btn.disabled = false;
+        btn.classList.remove("opacity-60", "cursor-not-allowed");
+    }
+}
+
+// ✅ 문자 버튼 이벤트 연결 (data-* 읽기)
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".sms-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            openSmsModal(
+                btn.dataset.patientId,
+                btn.dataset.name,
+                btn.dataset.phone,
+                btn.dataset.token
+            );
+        });
+    });
+});
+
+function markSmsSent(patientId) {
+    const rowBtn = document.getElementById(`smsBtn-${patientId}`);
+    if (!rowBtn) return;
+
+    rowBtn.classList.remove("text-sky-600", "hover:text-sky-800");
+    rowBtn.classList.add("text-emerald-600");
+    rowBtn.title = "전송 완료";
+    // rowBtn.disabled = true; // 원하면 켜기
+
+    // ✅ 이미 lucide가 <i>를 <svg>로 바꿔놨을 수도 있으니 둘 다 대응
+    const svg = rowBtn.querySelector("svg");
+    const i = rowBtn.querySelector("i[data-lucide]");
+
+    if (svg) {
+        // svg를 다시 i로 바꾸고, lucide가 재변환하게 함
+        svg.outerHTML = `<i data-lucide="check-circle" class="w-5 h-5"></i>`;
+    } else if (i) {
+        i.setAttribute("data-lucide", "check-circle");
+    } else {
+        rowBtn.insertAdjacentHTML("afterbegin",
+            `<i data-lucide="check-circle" class="w-5 h-5"></i>`
+        );
+    }
+
+    // ✅ lucide 버전마다 함수명이 달라서 둘 다 시도
+    if (window.lucide) {
+        if (typeof window.lucide.createIcons === "function") window.lucide.createIcons();
+        if (typeof window.lucide.replace === "function") window.lucide.replace();
+    }
+}
+
 </script>
 
 {% endblock %}
