@@ -30,7 +30,8 @@ class PreOpPatient(db.Model):
     name = db.Column(db.String(50), nullable=False)
     patient_id = db.Column(db.String(50), nullable=False)
     phone = db.Column(db.String(20), nullable=False)
-
+    sms_sent = db.Column(db.Boolean, default=False)   # 문자 전송 여부
+    sms_sent_at = db.Column(db.DateTime, nullable=True)  # 마지막 전송 시각
     gender = db.Column(db.String(1))
     surgery_name = db.Column(db.String(200))
     doctor_name = db.Column(db.String(50), nullable=False)
